@@ -69,6 +69,7 @@ struct AppDependencies {
     let media: any MediaStoring
     let video: VideoGenerationService
     let thumbnails: any VideoThumbnailing
+    let photoAccess: any PhotoLibraryAccess
 }
 
 extension AppContainer {
@@ -108,7 +109,7 @@ extension AppContainer {
         return AppDependencies(repository: repository, connectivity: connectivity,
                                subscription: subscription, chat: chat, videoRepository: videoRepository,
                                videoAPI: videoAPI, media: media, video: video,
-                               thumbnails: makeThumbnails(plan.storage))
+                               thumbnails: makeThumbnails(plan.storage), photoAccess: SystemPhotoLibraryAccess())
     }
 
     /// `-mockData` — каталог и генерация видео из фейка: экраны видео работают без сети.

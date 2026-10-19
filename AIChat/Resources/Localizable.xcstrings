@@ -107,6 +107,16 @@
         }
       }
     },
+    "Add photo" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить фото"
+          }
+        }
+      }
+    },
     "Animate" : {
       "localizations" : {
         "ru" : {
@@ -153,6 +163,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Назад"
+          }
+        }
+      }
+    },
+    "Best quality" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лучшее качество"
           }
         }
       }
@@ -303,6 +323,16 @@
         }
       }
     },
+    "Create" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать"
+          }
+        }
+      }
+    },
     "Create anything\nyou want" : {
       "localizations" : {
         "ru" : {
@@ -374,6 +404,26 @@
         }
       }
     },
+    "Faster generation" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрее генерация"
+          }
+        }
+      }
+    },
+    "Format" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат"
+          }
+        }
+      }
+    },
     "Generating a response" : {
       "localizations" : {
         "ru" : {
@@ -420,6 +470,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Чем могу помочь?"
+          }
+        }
+      }
+    },
+    "Landscape" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Альбомная"
           }
         }
       }
@@ -608,6 +668,16 @@
         }
       }
     },
+    "Portrait · Stories" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Портретная · Stories"
+          }
+        }
+      }
+    },
     "Privacy Policy" : {
       "localizations" : {
         "ru" : {
@@ -638,6 +708,16 @@
         }
       }
     },
+    "Quality" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Качество"
+          }
+        }
+      }
+    },
     "Queued messages sent" : {
       "comment" : "Notification toggle title and notification title when queued messages were sent.",
       "localizations" : {
@@ -659,12 +739,32 @@
         }
       }
     },
+    "Recommended" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рекомендуется"
+          }
+        }
+      }
+    },
     "Regenerate" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сгенерировать заново"
+          }
+        }
+      }
+    },
+    "Remove photo" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить фото"
           }
         }
       }
@@ -755,6 +855,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Что-то пошло не так. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "Square" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Квадрат"
           }
         }
       }
@@ -895,6 +1005,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открепить чат"
+          }
+        }
+      }
+    },
+    "Upload failed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить"
+          }
+        }
+      }
+    },
+    "Uploading photo" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузка фото"
           }
         }
       }

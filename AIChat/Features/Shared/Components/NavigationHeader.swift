@@ -3,11 +3,19 @@ import SwiftUI
 /// Шапка экранов «Settings», «History», «Result»: стрелка назад слева, заголовок по центру,
 /// необязательное действие справа. Системный навбар скрыт — так совпадает с макетом.
 struct NavigationHeader<Trailing: View>: View {
-    let title: LocalizedStringKey?
+    let title: Text?
     let onBack: () -> Void
     @ViewBuilder let trailing: () -> Trailing
 
     init(_ title: LocalizedStringKey? = nil, onBack: @escaping () -> Void,
+         @ViewBuilder trailing: @escaping () -> Trailing = { EmptyView() }) {
+        self.title = title.map { Text($0) }
+        self.onBack = onBack
+        self.trailing = trailing
+    }
+
+    /// Заголовок-данные (название шаблона из API) — без поиска в каталоге строк.
+    init(title: Text?, onBack: @escaping () -> Void,
          @ViewBuilder trailing: @escaping () -> Trailing = { EmptyView() }) {
         self.title = title
         self.onBack = onBack
@@ -17,7 +25,7 @@ struct NavigationHeader<Trailing: View>: View {
     var body: some View {
         ZStack {
             if let title {
-                Text(title)
+                title
                     .font(AppFont.navigationTitle)
                     .foregroundStyle(Color.appAccent)
                     .lineLimit(1)
