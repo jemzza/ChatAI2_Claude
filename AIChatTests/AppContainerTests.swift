@@ -31,10 +31,10 @@ struct LaunchOptionsTests {
     }
 
     @Test func parsesEachFlag() {
-        let options = LaunchOptions(arguments: ["app", "-mockData", "-mockOffline", "-mockSlowStream"])
+        let options = LaunchOptions(arguments: ["app", "-mockData", "-mockOffline", "-mockSlowReply"])
         #expect(options.useMockData)
         #expect(options.forceOffline)
-        #expect(options.slowStream)
+        #expect(options.slowReply)
         #expect(options.mockError == nil)
         #expect(options.usesMocks)
     }
@@ -66,8 +66,8 @@ struct DependencyPlanTests {
                 == DependencyPlan(storage: .previewData, network: .system, model: .live))
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockOffline"]))
                 == DependencyPlan(storage: .disk, network: .offline, model: .live))
-        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockSlowStream"]))
-                == DependencyPlan(storage: .disk, network: .system, model: .slowStream))
+        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockSlowReply"]))
+                == DependencyPlan(storage: .disk, network: .system, model: .slowReply))
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockError", "429"]))
                 == DependencyPlan(storage: .disk, network: .system, model: .failing(.rateLimited)))
     }
@@ -82,9 +82,9 @@ struct DependencyPlanTests {
         #expect(LaunchOptions(arguments: ["app", "-mockFree", "-mockPremium"]).mockPremium == true)
     }
 
-    /// Ошибка важнее медленного стрима: сценарий ошибки проверяем независимо.
+    /// Ошибка важнее медленного ответа: сценарий ошибки проверяем независимо.
     @Test func mockErrorWinsOverSlowStream() {
-        let options = LaunchOptions(arguments: ["app", "-mockSlowStream", "-mockError", "403"])
+        let options = LaunchOptions(arguments: ["app", "-mockSlowReply", "-mockError", "403"])
         #expect(DependencyPlan(options: options).model == .failing(.forbidden))
     }
 }

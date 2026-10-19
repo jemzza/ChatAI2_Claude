@@ -1,69 +1,49 @@
 import Foundation
 
-/// Логика чата: отправка, генерация ответа, «Stop», «Retry», outbox, удаление.
+/// Логика чата: отправка, ответ AI, «Retry»/«Regenerate», outbox, удаление.
 ///
 /// - База — единственный источник правды; сервис только пишет в неё через `ChatRepository`.
-/// - Живой черновик ответа — в памяти (`draftUpdates`), в базу текст пишется не чаще
-///   `writeInterval` и один раз в конце (исключение из offline-first, см. docs/task.md).
-/// - Генерацией владеет сервис (живёт в `AppContainer`), а не экран: уход с экрана её не отменяет.
+///   Идёт ли генерация, экран узнаёт по статусу `generating` в базе.
+/// - Запросом владеет сервис (живёт в `AppContainer`), а не экран: уход с экрана его не отменяет.
 @MainActor
-final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
-    struct Configuration: Sendable {
-        /// Сколько последних сообщений истории идёт в запрос.
-        var historyLimit = 20
-        /// Обрезка контекста по символам (≈2K токенов) — экономия лимита Groq.
-        var contextCharacterLimit = 6000
-        /// Сколько фото (самых свежих) идёт в запрос — лимит vision-модели Groq.
-        var imageLimit = ImageAttachment.maxPerMessage
-        /// Как часто писать стримящийся текст в базу.
-        var writeInterval: Duration = .milliseconds(500)
-    }
-
+final class ChatService: ChatSession {
     private struct Generation {
         let messageId: UUID
-        var text = ""
         var task: Task<Void, Never>?
-        /// Система забрала фоновое время — итог `interrupted`, а не `cancelled`.
+        /// Система забрала фоновое время — итог `interrupted`, а не `failed`.
         var interruptedBySystem = false
     }
 
     private let repository: any ChatRepository
-    private let provider: any LLMProvider
+    private let provider: any ChatProvider
     private let connectivity: any ConnectivityMonitoring
     private let backgroundTasks: (any BackgroundTaskScheduling)?
     /// Уведомления о готовом ответе и отправленном outbox.
     private let eventHandler: (any ChatEventHandling)?
-    private let clock: C
     private let now: () -> Date
-    private let configuration: Configuration
 
-    /// Не больше одной генерации на чат.
+    /// Не больше одного запроса на чат.
     private var generations: [UUID: Generation] = [:]
-    private var draftObservers: [UUID: [UUID: AsyncStream<StreamingDraft?>.Continuation]] = [:]
     private var isProcessingOutbox = false
     private var isOutboxRerunRequested = false
 
     init(
         repository: any ChatRepository,
-        provider: any LLMProvider,
+        provider: any ChatProvider,
         connectivity: any ConnectivityMonitoring,
         backgroundTasks: (any BackgroundTaskScheduling)? = nil,
         eventHandler: (any ChatEventHandling)? = nil,
-        clock: C,
-        now: @escaping () -> Date = Date.init,
-        configuration: Configuration = Configuration()
+        now: @escaping () -> Date = Date.init
     ) {
         self.repository = repository
         self.provider = provider
         self.connectivity = connectivity
         self.backgroundTasks = backgroundTasks
         self.eventHandler = eventHandler
-        self.clock = clock
         self.now = now
-        self.configuration = configuration
     }
 
-    /// Идёт ли сейчас генерация в чате.
+    /// Идёт ли сейчас запрос в чате.
     func isGenerating(chatId: UUID) -> Bool {
         generations[chatId] != nil
     }
@@ -85,25 +65,12 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
 
     // MARK: ChatSession
 
-    func draftUpdates(chatId: UUID) -> AsyncStream<StreamingDraft?> {
-        let (stream, continuation) = AsyncStream.makeStream(of: StreamingDraft?.self,
-                                                            bufferingPolicy: .bufferingNewest(1))
-        let id = UUID()
-        draftObservers[chatId, default: [:]][id] = continuation
-        continuation.yield(draft(chatId: chatId))
-        continuation.onTermination = { [weak self] _ in
-            Task { @MainActor in self?.draftObservers[chatId]?[id] = nil }
-        }
-        return stream
-    }
-
-    func send(_ text: String, images: [ImageAttachment], inChat chatId: UUID?) async throws -> UUID {
+    func send(_ text: String, inChat chatId: UUID?) async throws -> UUID {
         let date = now()
         let chatId = chatId ?? UUID()
         // Всегда сначала `pending`: переход в `sent` вместе с ответом — атомарный
         // `claimPending`, тот же путь, что у outbox, поэтому двойной отправки нет.
-        let message = Message(chatId: chatId, role: .user, text: text, status: .pending,
-                              images: Array(images.prefix(ImageAttachment.maxPerMessage)), createdAt: date)
+        let message = Message(chatId: chatId, role: .user, text: text, status: .pending, createdAt: date)
         if try await chatExists(chatId) {
             try await repository.insertMessage(message)
         } else {
@@ -116,17 +83,14 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
         return chatId
     }
 
-    func stopGenerating(chatId: UUID) {
-        generations[chatId]?.task?.cancel()
-    }
-
     func retry(assistantMessageId: UUID, inChat chatId: UUID) async throws {
         guard generations[chatId] == nil,
+              let question = try await question(before: assistantMessageId, inChat: chatId),
               try await repository.claimRetry(assistantMessageId: assistantMessageId),
               // Пока ждали базу, мог стартовать outbox в этом же чате.
               generations[chatId] == nil
         else { return }
-        startGeneration(chatId: chatId, messageId: assistantMessageId, provider: provider)
+        startGeneration(chatId: chatId, messageId: assistantMessageId, question: question)
     }
 
     func deleteChat(id: UUID) async throws {
@@ -136,7 +100,6 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
     }
 
     func deleteAll() async throws {
-        // Запоздалые записи отменённых генераций получат `MessageNotFound` — их глотаем в `generate`.
         for generation in generations.values { generation.task?.cancel() }
         try await repository.deleteAll()
     }
@@ -165,7 +128,7 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
             guard connectivity.isOnline, let pending = try? await repository.pendingMessages() else { return sent }
             for message in pending {
                 guard connectivity.isOnline else { return sent }
-                // Чат занят генерацией — его сообщения уйдут, когда она закончится
+                // Чат занят — его сообщения уйдут, когда запрос закончится
                 // (`finishGeneration` снова запускает outbox).
                 guard generations[message.chatId] == nil else { continue }
                 guard let task = try? await claimAndGenerate(message) else { continue }
@@ -177,31 +140,27 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
     }
 
     /// Атомарно `pending` → `sent` + ответ `generating`; `nil` — сообщение уже забрали.
-    private func claimAndGenerate(
-        _ message: Message,
-        provider: (any LLMProvider)? = nil
-    ) async throws -> Task<Void, Never>? {
+    private func claimAndGenerate(_ message: Message) async throws -> Task<Void, Never>? {
         // Ответ сразу после своего вопроса, даже если за ним уже стоят другие `pending`.
         let reply = Message(chatId: message.chatId, role: .assistant, text: "", status: .generating,
                             createdAt: message.createdAt.addingTimeInterval(0.001))
         guard try await repository.claimPending(messageId: message.id, reply: reply) else { return nil }
-        return startGeneration(chatId: message.chatId, messageId: reply.id, provider: provider ?? self.provider)
+        return startGeneration(chatId: message.chatId, messageId: reply.id, question: message.text)
     }
 
     // MARK: Генерация
 
     @discardableResult
-    private func startGeneration(chatId: UUID, messageId: UUID, provider: any LLMProvider) -> Task<Void, Never> {
+    private func startGeneration(chatId: UUID, messageId: UUID, question: String) -> Task<Void, Never> {
         generations[chatId] = Generation(messageId: messageId)
         let task = Task { [weak self] () -> Void in
-            await self?.generate(chatId: chatId, messageId: messageId, provider: provider)
+            await self?.generate(chatId: chatId, messageId: messageId, question: question)
         }
         generations[chatId]?.task = task
-        publishDraft(chatId: chatId)
         return task
     }
 
-    private func generate(chatId: UUID, messageId: UUID, provider: any LLMProvider) async {
+    private func generate(chatId: UUID, messageId: UUID, question: String) async {
         let backgroundToken = backgroundTasks?.beginTask { [weak self] in
             self?.generations[chatId]?.interruptedBySystem = true
             self?.generations[chatId]?.task?.cancel()
@@ -212,27 +171,12 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
 
         var text = ""
         var failure: MessageFailure?
-        var lastWrite: C.Instant?
         do {
-            let context = try await context(chatId: chatId, before: messageId)
-            for try await delta in provider.streamReply(to: context) {
-                text += delta
-                generations[chatId]?.text = text
-                publishDraft(chatId: chatId)
-                let instant = clock.now
-                if lastWrite.map({ $0.duration(to: instant) >= configuration.writeInterval }) ?? true {
-                    lastWrite = instant
-                    try await repository.updateMessage(id: messageId, text: text, status: .generating, failure: nil)
-                }
-            }
-        } catch is MessageNotFound {
-            // Чат удалили во время генерации — писать некуда.
-            finishGeneration(chatId: chatId, messageId: messageId)
-            return
-        } catch let error as LLMError {
+            text = try await provider.reply(to: question, inChat: chatId)
+        } catch let error as APIError {
             failure = MessageFailure(kind: error.kind, retryAt: error.retryAfter.map { retryDate(after: $0) })
         } catch {
-            // Отмена (в т.ч. `CancellationError` из базы) — это «Stop», а не ошибка.
+            // Отмена без системы — чат удаляют: писать некуда, `MessageNotFound` проглотим ниже.
             if !Task.isCancelled { failure = MessageFailure(kind: .unknown) }
         }
 
@@ -242,16 +186,18 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
             failure = nil
         } else if failure != nil {
             status = .failed
+        } else if Task.isCancelled {
+            status = .cancelled
         } else {
-            status = Task.isCancelled ? .cancelled : .done
+            status = .done
         }
-        // Финальная запись — в отдельной задаче: отменённая генерация («Stop») сама
-        // записать уже не может, а частичный текст должен сохраниться.
+        // Запись — в отдельной задаче: отменённая генерация сама записать уже не может.
         let repository = repository
+        let finalText = text
         let finalFailure = failure
         let saved = await Task {
             do {
-                try await repository.updateMessage(id: messageId, text: text, status: status, failure: finalFailure)
+                try await repository.updateMessage(id: messageId, text: finalText, status: status, failure: finalFailure)
                 return true
             } catch {
                 // `MessageNotFound` — чат удалён; прочее — ответ останется `generating`
@@ -269,59 +215,19 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
     private func finishGeneration(chatId: UUID, messageId: UUID) {
         guard generations[chatId]?.messageId == messageId else { return }
         generations[chatId] = nil
-        publishDraft(chatId: chatId)
-        // Пока шла генерация, в чате могли накопиться `pending`.
+        // Пока шёл запрос, в чате могли накопиться `pending`.
         if connectivity.isOnline {
             Task { await processOutbox() }
         }
     }
 
-    // MARK: Контекст
-
-    private func context(chatId: UUID, before messageId: UUID) async throws -> [LLMMessage] {
-        let history = try await repository.history(chatId: chatId, before: messageId,
-                                                   limit: configuration.historyLimit)
-        let messages = history.map { message in
-            LLMMessage(role: message.role == .user ? .user : .assistant, content: message.text,
-                       images: message.images.map(\.jpegData))
-        }
-        let trimmed = Self.trimmed(messages, characterLimit: configuration.contextCharacterLimit)
-        return Self.keepingNewestImages(trimmed, limit: configuration.imageLimit)
-    }
-
-    /// Не больше `limit` фото на запрос: у старых сообщений фото убираются первыми, текст остаётся.
-    nonisolated static func keepingNewestImages(_ messages: [LLMMessage], limit: Int) -> [LLMMessage] {
-        var remaining = max(limit, 0)
-        return messages.reversed().map { message in
-            guard !message.images.isEmpty else { return message }
-            let kept = Array(message.images.suffix(remaining))
-            remaining -= kept.count
-            return LLMMessage(role: message.role, content: message.content, images: kept)
-        }.reversed()
-    }
-
-    /// Последние сообщения, суммарно не длиннее `characterLimit`. Последнее
-    /// (вопрос пользователя) остаётся всегда, даже если само длиннее лимита.
-    nonisolated static func trimmed(_ messages: [LLMMessage], characterLimit: Int) -> [LLMMessage] {
-        var total = 0
-        var kept: [LLMMessage] = []
-        for message in messages.reversed() {
-            total += message.content.count
-            guard kept.isEmpty || total <= characterLimit else { break }
-            kept.append(message)
-        }
-        return kept.reversed()
-    }
-
     // MARK: Вспомогательное
 
-    private func draft(chatId: UUID) -> StreamingDraft? {
-        generations[chatId].map { StreamingDraft(messageId: $0.messageId, text: $0.text) }
-    }
-
-    private func publishDraft(chatId: UUID) {
-        let draft = draft(chatId: chatId)
-        for continuation in draftObservers[chatId, default: [:]].values { continuation.yield(draft) }
+    /// Вопрос, на который отвечает сообщение ассистента, — сообщение пользователя прямо перед ним.
+    private func question(before assistantMessageId: UUID, inChat chatId: UUID) async throws -> String? {
+        let context = try await repository.history(chatId: chatId, before: assistantMessageId, limit: 1)
+        guard let last = context.last, last.role == .user else { return nil }
+        return last.text
     }
 
     private func chatExists(_ chatId: UUID) async throws -> Bool {

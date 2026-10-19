@@ -31,18 +31,24 @@ private struct LiveRoot: View {
     }
 
     @State private var phase = Phase.loading
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
             switch phase {
             case .loading:
                 Color.appBackground.ignoresSafeArea()
-            case .ready:
+            case let .ready(dependencies):
                 // Временная заглушка: экраны по Figma появятся в разделах 5–6 плана.
                 Text("AI Chat")
                     .font(.title2.weight(.semibold))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.appBackground.ignoresSafeArea())
+                    // Сеть и запуск → outbox; живёт столько же, сколько окно.
+                    .task { await dependencies.chat.run() }
+                    .onChange(of: scenePhase) { phase in
+                        if phase == .active { dependencies.chat.appDidBecomeActive() }
+                    }
             case .failed:
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")

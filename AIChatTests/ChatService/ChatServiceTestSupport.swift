@@ -1,48 +1,6 @@
 import Foundation
 @testable import AIChat
 
-/// Часы, которые двигает тест. Спать не умеют — `ChatService` их только читает.
-final class ManualClock: Clock, Sendable {
-    struct Instant: InstantProtocol {
-        let offset: Duration
-        func advanced(by duration: Duration) -> Instant { Instant(offset: offset + duration) }
-        func duration(to other: Instant) -> Duration { other.offset - offset }
-        static func < (lhs: Instant, rhs: Instant) -> Bool { lhs.offset < rhs.offset }
-    }
-
-    private let current = Locked(Instant(offset: .zero))
-
-    var now: Instant { current.withLock { $0 } }
-    var minimumResolution: Duration { .zero }
-
-    func advance(by duration: Duration) {
-        current.withLock { $0 = $0.advanced(by: duration) }
-    }
-
-    func sleep(until deadline: Instant, tolerance: Duration?) async throws {}
-}
-
-/// Провайдер, который перед каждым токеном двигает часы — для проверки троттлинга.
-struct ClockAdvancingProvider: LLMProvider {
-    let tokens: [String]
-    let step: Duration
-    let clock: ManualClock
-
-    var displayName: LocalizedStringResource { "Test" }
-
-    /// Токен — только когда потребитель его попросил: часы двигаются в такт чтению.
-    func streamReply(to messages: [LLMMessage]) -> AsyncThrowingStream<String, Error> {
-        let remaining = Locked(tokens[...])
-        let clock = clock
-        let step = step
-        return AsyncThrowingStream {
-            guard let token = remaining.withLock({ $0.popFirst() }) else { return nil }
-            clock.advance(by: step)
-            return token
-        }
-    }
-}
-
 /// Репозиторий-обёртка: всё передаёт дальше и запоминает вызовы `updateMessage`.
 final class RecordingRepository: ChatRepository {
     let base: any ChatRepository

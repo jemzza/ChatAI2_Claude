@@ -3,7 +3,7 @@ import Foundation
 /// Подписка пользователя. Реализация — Apphud (`Data/Subscription`), фейк — `Mocks/`.
 /// ViewModel работают только с этим протоколом и не знают про ApphudSDK.
 @MainActor
-protocol SubscriptionService: AnyObject {
+protocol SubscriptionService: AnyObject, Sendable {
     /// Есть ли сейчас полный доступ (активная подписка или покупка).
     var isPremium: Bool { get }
 

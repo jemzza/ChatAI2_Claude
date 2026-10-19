@@ -6,13 +6,13 @@ import Foundation
 /// - `-mockData` — репозиторий в памяти с `PreviewData`;
 /// - `-mockOffline` — сеть всегда «нет»;
 /// - `-mockError 429|401|402|403|500|offline` — сеть отвечает этой ошибкой;
-/// - `-mockSlowStream` — LLM-фейк с медленным ответом;
+/// - `-mockSlowReply` — фейковый AI отвечает через несколько секунд;
 /// - `-mockPremium` / `-mockFree` — подписка-фейк с активной подпиской / без неё.
 struct LaunchOptions: Hashable, Sendable {
     var useMockData = false
     var forceOffline = false
     var mockError: ErrorKind?
-    var slowStream = false
+    var slowReply = false
     /// `nil` — настоящий Apphud.
     var mockPremium: Bool?
 
@@ -26,7 +26,7 @@ struct LaunchOptions: Hashable, Sendable {
         #if DEBUG
         useMockData = arguments.contains("-mockData")
         forceOffline = arguments.contains("-mockOffline")
-        slowStream = arguments.contains("-mockSlowStream")
+        slowReply = arguments.contains("-mockSlowReply")
         if arguments.contains("-mockPremium") {
             mockPremium = true
         } else if arguments.contains("-mockFree") {

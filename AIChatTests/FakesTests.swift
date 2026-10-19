@@ -2,72 +2,28 @@ import Foundation
 import Testing
 @testable import AIChat
 
-struct FakeLLMProviderTests {
-    @Test func streamsTextTokenByToken() async {
-        let text = "Hello **world**\nsecond line"
-        let provider = FakeLLMProvider(script: .reply(text, tokenDelay: .zero))
-        let request = [LLMMessage(role: .user, content: "Hi")]
+struct FakeChatProviderTests {
+    @Test func repliesAndRecordsRequests() async throws {
+        let provider = FakeChatProvider(script: .reply("Hello"))
+        let chatId = UUID()
 
-        let result = await collect(provider.streamReply(to: request))
-
-        #expect(result.text == text)
-        #expect(result.error == nil)
-        #expect(FakeLLMProvider.tokens(of: text).count == 4)
-        #expect(provider.requests == [request])
+        #expect(try await provider.reply(to: "Hi", inChat: chatId) == "Hello")
+        #expect(provider.requests == [FakeChatProvider.Request(chatId: chatId, text: "Hi")])
     }
 
-    @Test func failsAfterPartialText() async {
-        let error = LLMError(kind: .rateLimited, retryAfter: .seconds(12))
-        let provider = FakeLLMProvider(script: .fail(error, partialText: "Half ", tokenDelay: .zero))
-
-        let result = await collect(provider.streamReply(to: []))
-
-        #expect(result.text == "Half ")
-        #expect(result.error as? LLMError == error)
-    }
-
-    /// Отмена завершает «висящий» поток; итерация кончается без ошибки,
-    /// а потребитель видит отмену через `Task.isCancelled`.
-    @Test func cancellationStopsHangingStream() async {
-        let provider = FakeLLMProvider(script: .hang)
-        let task = Task {
-            let result = await collect(provider.streamReply(to: []))
-            return (result, Task.isCancelled)
+    @Test func failsWithScriptedError() async {
+        let provider = FakeChatProvider(script: .fail(APIError(kind: .rateLimited, retryAfter: .seconds(12))))
+        await #expect(throws: APIError(kind: .rateLimited, retryAfter: .seconds(12))) {
+            _ = try await provider.reply(to: "Hi", inChat: UUID())
         }
+    }
 
-        try? await Task.sleep(for: .milliseconds(50))
+    @Test func hangingReplyEndsOnCancellation() async {
+        let provider = FakeChatProvider(script: .hang)
+        let task = Task { try await provider.reply(to: "Hi", inChat: UUID()) }
+        try? await Task.sleep(for: .milliseconds(30))
         task.cancel()
-        let (result, wasCancelled) = await task.value
-
-        #expect(result.text.isEmpty)
-        #expect(result.error == nil)
-        #expect(wasCancelled)
-    }
-
-    /// Отмена посреди ответа: уже полученный текст остаётся у потребителя.
-    /// Отменяем сразу после первого токена, а не по таймеру: под параллельной
-    /// нагрузкой таймер не гарантирует, что токен успел прийти.
-    @Test func cancellationKeepsReceivedText() async {
-        let provider = FakeLLMProvider(script: .reply("one two three four five", tokenDelay: .milliseconds(40)))
-        let task = Task {
-            var text = ""
-            var error: (any Error)?
-            do {
-                for try await token in provider.streamReply(to: []) {
-                    text += token
-                    withUnsafeCurrentTask { $0?.cancel() }
-                }
-            } catch let caught {
-                error = caught
-            }
-            return (text, error, Task.isCancelled)
-        }
-
-        let (text, error, wasCancelled) = await task.value
-
-        #expect(text == "one ")
-        #expect(error == nil)
-        #expect(wasCancelled)
+        await #expect(throws: CancellationError.self) { _ = try await task.value }
     }
 }
 

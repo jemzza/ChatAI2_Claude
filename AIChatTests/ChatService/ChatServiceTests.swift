@@ -6,33 +6,23 @@ import Testing
 struct ChatServiceTests {
     private struct Harness {
         let repository: RecordingRepository
-        let provider: FakeLLMProvider
+        let provider: FakeChatProvider
         let connectivity: FakeConnectivityMonitor
         let backgroundTasks: ManualBackgroundTasks
-        let service: ChatService<ManualClock>
+        let service: ChatService
     }
 
-    private static let fixedNow = Date(timeIntervalSince1970: 1_000_000)
+    private nonisolated static let fixedNow = Date(timeIntervalSince1970: 1_000_000)
 
-    private func makeHarness(
-        script: FakeLLMProvider.Script = .reply("Hello world", tokenDelay: .zero),
-        isOnline: Bool = true,
-        provider customProvider: (any LLMProvider)? = nil,
-        clock: ManualClock = ManualClock()
-    ) throws -> Harness {
+    private func makeHarness(script: FakeChatProvider.Script = .reply("Hello world"),
+                             isOnline: Bool = true) throws -> Harness {
         let repository = RecordingRepository(base: GRDBChatRepository(database: try AppDatabase.inMemory()))
-        let provider = FakeLLMProvider(script: script)
+        let provider = FakeChatProvider(script: script)
         let connectivity = FakeConnectivityMonitor(isOnline: isOnline)
         let backgroundTasks = ManualBackgroundTasks()
         let dates = SteppingDates(start: Self.fixedNow)
-        let service = ChatService(
-            repository: repository,
-            provider: customProvider ?? provider,
-            connectivity: connectivity,
-            backgroundTasks: backgroundTasks,
-            clock: clock,
-            now: { dates.next() }
-        )
+        let service = ChatService(repository: repository, provider: provider, connectivity: connectivity,
+                                  backgroundTasks: backgroundTasks, now: { dates.next() })
         return Harness(repository: repository, provider: provider, connectivity: connectivity,
                        backgroundTasks: backgroundTasks, service: service)
     }
@@ -47,20 +37,34 @@ struct ChatServiceTests {
 
     // MARK: Отправка
 
-    @Test func onlineSendCreatesChatAndStreamsReplyToDone() async throws {
+    @Test func onlineSendCreatesChatAndStoresReply() async throws {
         let harness = try makeHarness()
 
         let chatId = try await harness.service.send("Hi there", inChat: nil)
 
         let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
         #expect(messages.map(\.role) == [.user, .assistant])
-        #expect(messages.map(\.status) == [.sent, .done])
-        #expect(messages.last?.text == "Hello world")
+        #expect(messages.map(\.text) == ["Hi there", "Hello world"])
+        #expect(messages.first?.status == .sent)
+        #expect(harness.provider.requests == [FakeChatProvider.Request(chatId: chatId, text: "Hi there")])
         let chats = try await firstValue(of: harness.repository.observeChats())
         #expect(chats.map(\.title) == ["Hi there"])
-        #expect(harness.provider.requests == [[LLMMessage(role: .user, content: "Hi there")]])
+        // Ответ целиком — одна запись в базу.
         try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
+        #expect(harness.repository.updateStatuses == [.done])
         #expect(harness.backgroundTasks.activeCount == 0)
+    }
+
+    /// Пока ждём ответ, в базе лежит `generating` — по нему экран показывает анимацию.
+    @Test func replyIsGeneratingWhileWaiting() async throws {
+        let harness = try makeHarness(script: .hang)
+
+        let chatId = try await harness.service.send("Hi", inChat: nil)
+
+        let messages = try await messages(harness, chatId: chatId) { $0.count == 2 }
+        #expect(messages.last?.status == .generating)
+        #expect(harness.service.isGenerating(chatId: chatId))
+        try await harness.service.deleteChat(id: chatId)
     }
 
     @Test func offlineSendStaysPendingWithoutRequest() async throws {
@@ -73,128 +77,74 @@ struct ChatServiceTests {
         #expect(harness.provider.requests.isEmpty)
     }
 
-    @Test func draftGrowsByTokensAndClearsAtTheEnd() async throws {
-        let harness = try makeHarness(script: .reply("one two three", tokenDelay: .milliseconds(20)))
-        let chatId = UUID()
-        var drafts = harness.service.draftUpdates(chatId: chatId).makeAsyncIterator()
-        #expect(await drafts.next() == .some(nil))
+    @Test(arguments: [
+        (APIError(kind: .rateLimited, retryAfter: .seconds(30)), Optional(fixedNow.addingTimeInterval(2 + 30))),
+        (APIError(kind: .paymentRequired), nil),
+        (APIError(kind: .unauthorized), nil),
+        (APIError(kind: .offline), nil),
+    ])
+    func providerErrorMarksFailed(error: APIError, retryAt: Date?) async throws {
+        let harness = try makeHarness(script: .fail(error))
 
-        _ = try await harness.service.send("Count", inChat: chatId)
-
-        var texts: [String] = []
-        while let draft = await drafts.next() {
-            guard let draft else { break }
-            texts.append(draft.text)
-        }
-        #expect(texts.last == "one two three")
-        #expect(texts.contains("one "))
-    }
-
-    // MARK: Троттлинг
-
-    /// Часы стоят: в базу — только первый токен и финальная запись.
-    @Test func streamingWritesAreThrottled() async throws {
-        let harness = try makeHarness(script: .reply("a b c d e f g h", tokenDelay: .zero))
-
-        let chatId = try await harness.service.send("Go", inChat: nil)
-        _ = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-
-        #expect(harness.repository.updateStatuses == [.generating, .done])
-    }
-
-    /// Токен каждые 300 мс при интервале 500 мс: пишем на 1-м, 3-м и 5-м токене + финал.
-    @Test func streamingWritesFollowClock() async throws {
-        let clock = ManualClock()
-        let provider = ClockAdvancingProvider(tokens: ["1 ", "2 ", "3 ", "4 ", "5"], step: .milliseconds(300),
-                                              clock: clock)
-        let harness = try makeHarness(provider: provider, clock: clock)
-
-        let chatId = try await harness.service.send("Go", inChat: nil)
-        let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-
-        #expect(harness.repository.updateStatuses == [.generating, .generating, .generating, .done])
-        #expect(messages.last?.text == "1 2 3 4 5")
-    }
-
-    // MARK: Stop, ошибки, Retry
-
-    @Test func stopKeepsPartialTextAsCancelled() async throws {
-        let full = "one two three four five six seven eight"
-        let harness = try makeHarness(script: .reply(full, tokenDelay: .milliseconds(30)))
-        let chatId = try await harness.service.send("Count", inChat: nil)
-
-        var drafts = harness.service.draftUpdates(chatId: chatId).makeAsyncIterator()
-        while let draft = await drafts.next() {
-            if let draft, draft.text.hasPrefix("one two") { break }
-        }
-        harness.service.stopGenerating(chatId: chatId)
-
-        let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .cancelled }
-        let text = try #require(messages.last?.text)
-        #expect(text.hasPrefix("one two"))
-        #expect(text != full)
-        #expect(messages.last?.failure == nil)
-    }
-
-    @Test func providerErrorMarksFailedWithRetryDate() async throws {
-        let error = LLMError(kind: .rateLimited, retryAfter: .seconds(30))
-        let harness = try makeHarness(script: .fail(error, partialText: "Half ", tokenDelay: .zero))
-
-        let chatId = try await harness.service.send("Go", inChat: nil)
+        let chatId = try await harness.service.send("Hi", inChat: nil)
 
         let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .failed }
-        #expect(messages.last?.text == "Half ")
-        let failure = try #require(messages.last?.failure)
-        #expect(failure.kind == .rateLimited)
-        // Время в тесте идёт по секунде за вызов: `retry-after` отсчитан от момента ошибки.
-        let retryAt = try #require(failure.retryAt)
-        let sent = try #require(messages.first?.createdAt)
-        #expect(retryAt.timeIntervalSince(sent) > 30)
-        #expect(retryAt.timeIntervalSince(sent) < 40)
+        #expect(messages.last?.failure == MessageFailure(kind: error.kind, retryAt: retryAt))
+        #expect(messages.last?.text == "")
     }
 
-    @Test func doubleRetryStartsOneGeneration() async throws {
-        let harness = try makeHarness(script: .fail(LLMError(kind: .server), tokenDelay: .zero))
-        let chatId = try await harness.service.send("Go", inChat: nil)
+    // MARK: Retry и Regenerate
+
+    @Test func retryAsksTheSameQuestionAgain() async throws {
+        let harness = try makeHarness(script: .fail(APIError(kind: .server)))
+        let chatId = try await harness.service.send("Question", inChat: nil)
         let failed = try await messages(harness, chatId: chatId) { $0.last?.status == .failed }
-        let replyId = try #require(failed.last?.id)
         try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
-        harness.provider.setScript(.reply("Recovered", tokenDelay: .milliseconds(20)))
+        harness.provider.setScript(.reply("Answer"))
+
+        try await harness.service.retry(assistantMessageId: try #require(failed.last).id, inChat: chatId)
+
+        let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
+        #expect(messages.map(\.text) == ["Question", "Answer"])
+        #expect(messages.last?.id == failed.last?.id)
+        #expect(messages.last?.failure == nil)
+        #expect(harness.provider.requests.map(\.text) == ["Question", "Question"])
+    }
+
+    @Test func regenerateReplacesDoneReplyInPlace() async throws {
+        let harness = try makeHarness(script: .reply("First answer"))
+        let chatId = try await harness.service.send("Question", inChat: nil)
+        let done = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
+        try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
+        harness.provider.setScript(.reply("Second answer"))
+
+        try await harness.service.retry(assistantMessageId: try #require(done.last).id, inChat: chatId)
+
+        let messages = try await messages(harness, chatId: chatId) { $0.last?.text == "Second answer" }
+        #expect(messages.count == 2)
+        #expect(messages.last?.status == .done)
+    }
+
+    @Test func doubleRetryStartsOneRequest() async throws {
+        let harness = try makeHarness(script: .fail(APIError(kind: .server)))
+        let chatId = try await harness.service.send("Question", inChat: nil)
+        let failed = try await messages(harness, chatId: chatId) { $0.last?.status == .failed }
+        try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
+        harness.provider.setScript(.reply("Answer", delay: .milliseconds(50)))
+        let replyId = try #require(failed.last).id
 
         async let first: Void = harness.service.retry(assistantMessageId: replyId, inChat: chatId)
         async let second: Void = harness.service.retry(assistantMessageId: replyId, inChat: chatId)
         _ = try await (first, second)
 
-        let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-        #expect(messages.count == 2)
-        #expect(messages.last?.id == replyId)
-        #expect(messages.last?.text == "Recovered")
+        _ = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
         #expect(harness.provider.requests.count == 2)
-    }
-
-    /// Перегенерация: тот же ответ получает новый текст, старый текст в контекст не идёт.
-    @Test func regenerateReplacesDoneReplyInPlace() async throws {
-        let harness = try makeHarness(script: .reply("First answer", tokenDelay: .zero))
-        let chatId = try await harness.service.send("Question", inChat: nil)
-        let done = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-        let replyId = try #require(done.last?.id)
-        try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
-        harness.provider.setScript(.reply("Second answer", tokenDelay: .zero))
-
-        try await harness.service.retry(assistantMessageId: replyId, inChat: chatId)
-
-        let messages = try await messages(harness, chatId: chatId) {
-            $0.last?.status == .done && $0.last?.text == "Second answer"
-        }
-        #expect(messages.count == 2)
-        #expect(messages.last?.id == replyId)
-        #expect(harness.provider.requests.last == [LLMMessage(role: .user, content: "Question")])
     }
 
     // MARK: Outbox
 
     @Test func outboxSendsPendingOnceInOrderWhenOnline() async throws {
-        let harness = try makeHarness(script: .reply("Ok", tokenDelay: .zero), isOnline: false)
+        let harness = try makeHarness(script: .reply("Ok"), isOnline: false)
         let chatId = try await harness.service.send("First", inChat: nil)
         _ = try await harness.service.send("Second", inChat: chatId)
         let run = Task { await harness.service.run() }
@@ -213,38 +163,12 @@ struct ChatServiceTests {
         #expect(messages.map(\.text) == ["First", "Ok", "Second", "Ok"])
         try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
         try await Task.sleep(for: .milliseconds(100))
-        #expect(harness.provider.requests.count == 2)
-        // Второй запрос видит первый вопрос и ответ на него.
-        #expect(harness.provider.requests.last?.map(\.content) == ["First", "Ok", "Second"])
-    }
-
-    // MARK: Фото
-
-    @Test func photosGoToProviderWithTheQuestion() async throws {
-        let harness = try makeHarness()
-        let photo = ImageAttachment(jpegData: Data([9]))
-
-        let chatId = try await harness.service.send("What is it?", images: [photo], inChat: nil)
-
-        let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-        #expect(messages.first?.images == [photo])
-        #expect(harness.provider.requests == [[LLMMessage(role: .user, content: "What is it?", images: [Data([9])])]])
-    }
-
-    @Test func onlyNewestPhotosStayInContext() {
-        let old = LLMMessage(role: .user, content: "a", images: [Data([1]), Data([2])])
-        let answer = LLMMessage(role: .assistant, content: "b")
-        let new = LLMMessage(role: .user, content: "c", images: [Data([3]), Data([4])])
-
-        let kept = ChatService<ManualClock>.keepingNewestImages([old, answer, new], limit: 3)
-
-        #expect(kept.map(\.images) == [[Data([2])], [], [Data([3]), Data([4])]])
-        #expect(kept.map(\.content) == ["a", "b", "c"])
+        #expect(harness.provider.requests.map(\.text) == ["First", "Second"])
     }
 
     // MARK: Удаление и прерывание
 
-    @Test func deletingChatCancelsGeneration() async throws {
+    @Test func deletingChatCancelsRequest() async throws {
         let harness = try makeHarness(script: .hang)
         let chatId = try await harness.service.send("Go", inChat: nil)
         #expect(harness.service.isGenerating(chatId: chatId))
@@ -252,16 +176,14 @@ struct ChatServiceTests {
         try await harness.service.deleteChat(id: chatId)
 
         try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
-        let chats = try await firstValue(of: harness.repository.observeChats())
-        #expect(chats.isEmpty)
+        #expect(try await firstValue(of: harness.repository.observeChats()).isEmpty)
+        #expect(harness.backgroundTasks.activeCount == 0)
     }
 
-    @Test func deleteAllCancelsEveryGenerationAndEmptiesRepository() async throws {
+    @Test func deleteAllCancelsEveryRequestAndEmptiesRepository() async throws {
         let harness = try makeHarness(script: .hang)
         let first = try await harness.service.send("One", inChat: nil)
         let second = try await harness.service.send("Two", inChat: nil)
-        #expect(harness.service.isGenerating(chatId: first))
-        #expect(harness.service.isGenerating(chatId: second))
 
         try await harness.service.deleteAll()
 
@@ -269,21 +191,18 @@ struct ChatServiceTests {
             !harness.service.isGenerating(chatId: first) && !harness.service.isGenerating(chatId: second)
         }
         #expect(try await firstValue(of: harness.repository.observeChats()).isEmpty)
-        #expect(try await harness.repository.pendingMessages().isEmpty)
         #expect(harness.backgroundTasks.activeCount == 0)
     }
 
     /// Чат удалили в обход сервиса — запоздавшая запись получает `MessageNotFound` и глотается.
-    @Test func lateWriteToDeletedChatIsSwallowed() async throws {
-        let harness = try makeHarness(script: .hang)
+    @Test func lateReplyToDeletedChatIsSwallowed() async throws {
+        let harness = try makeHarness(script: .reply("Late", delay: .milliseconds(100)))
         let chatId = try await harness.service.send("Go", inChat: nil)
-        try await waitUntil { harness.provider.requests.count == 1 }
 
         try await harness.repository.deleteChat(id: chatId)
-        harness.service.stopGenerating(chatId: chatId)
 
         try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
-        #expect(harness.repository.updateStatuses == [.cancelled])
+        #expect(harness.repository.updateStatuses == [.done])
         #expect(harness.backgroundTasks.activeCount == 0)
     }
 
@@ -298,37 +217,5 @@ struct ChatServiceTests {
         let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .interrupted }
         #expect(messages.last?.failure == nil)
         try await waitUntil { harness.backgroundTasks.activeCount == 0 }
-    }
-
-    // MARK: Контекст
-
-    @Test func contextSkipsFailedRepliesAndKeepsCancelledText() async throws {
-        let harness = try makeHarness(script: .fail(LLMError(kind: .server), tokenDelay: .zero))
-        let chatId = try await harness.service.send("One", inChat: nil)
-        _ = try await messages(harness, chatId: chatId) { $0.last?.status == .failed }
-        try await waitUntil { !harness.service.isGenerating(chatId: chatId) }
-
-        harness.provider.setScript(.reply("Answer", tokenDelay: .zero))
-        _ = try await harness.service.send("Two", inChat: chatId)
-        _ = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
-
-        #expect(harness.provider.requests.last == [
-            LLMMessage(role: .user, content: "One"),
-            LLMMessage(role: .user, content: "Two"),
-        ])
-    }
-
-    @Test func contextIsTrimmedFromTheOldestEnd() {
-        let messages = ["aaaa", "bbbb", "cccc"].map { LLMMessage(role: .user, content: $0) }
-        let trimmed = ChatService<ManualClock>.trimmed(messages, characterLimit: 9)
-        #expect(trimmed.map(\.content) == ["bbbb", "cccc"])
-    }
-
-    @Test func lastMessageIsKeptEvenIfLongerThanLimit() {
-        let messages = [LLMMessage(role: .user, content: "short"),
-                        LLMMessage(role: .user, content: String(repeating: "x", count: 50))]
-        let trimmed = ChatService<ManualClock>.trimmed(messages, characterLimit: 10)
-        #expect(trimmed.count == 1)
-        #expect(trimmed.first?.content.count == 50)
     }
 }

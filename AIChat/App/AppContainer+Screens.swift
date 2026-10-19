@@ -22,8 +22,8 @@ struct DependencyPlan: Hashable, Sendable {
         case live
         /// `-mockError <code>`: каждый ответ падает с этой ошибкой.
         case failing(ErrorKind)
-        /// `-mockSlowStream`: медленный фейковый ответ.
-        case slowStream
+        /// `-mockSlowReply`: фейковый ответ через несколько секунд.
+        case slowReply
     }
 
     enum Subscription: Hashable, Sendable {
@@ -51,19 +51,19 @@ struct DependencyPlan: Hashable, Sendable {
         if let kind = options.mockError {
             model = .failing(kind)
         } else {
-            model = options.slowStream ? .slowStream : .live
+            model = options.slowReply ? .slowReply : .live
         }
         subscription = options.mockPremium.map { .fake(isPremium: $0) } ?? .apphud
     }
 }
 
-/// Зависимости, общие для всех экранов. Пока — база, сеть и подписка; сервисы чата
-/// и видео подключаются в своих шагах плана.
+/// Зависимости, общие для всех экранов. Сервис видео подключается в своём шаге плана.
 @MainActor
 struct AppDependencies {
     let repository: any ChatRepository
     let connectivity: any ConnectivityMonitoring
     let subscription: any SubscriptionService
+    let chat: ChatService
 }
 
 extension AppContainer {
@@ -73,12 +73,69 @@ extension AppContainer {
         let plan = DependencyPlan(options: launchOptions)
         // Подписка — первой: её `userID` нужен каждому запросу к API.
         let subscription = makeSubscription(plan.subscription)
-        return AppDependencies(
-            repository: try await makeRepository(plan.storage),
-            connectivity: makeConnectivity(plan.network),
-            subscription: subscription
+        let repository = try await makeRepository(plan.storage)
+        let connectivity = makeConnectivity(plan.network)
+        let notifications = NotificationService(
+            settings: settings,
+            scheduler: UserNotificationScheduler(),
+            activity: UIKitAppActivity(),
+            repository: repository
+        )
+        let chat = ChatService(
+            repository: repository,
+            provider: makeChatProvider(plan.model, subscription: subscription),
+            connectivity: connectivity,
+            backgroundTasks: UIKitBackgroundTasks(),
+            eventHandler: notifications
+        )
+        return AppDependencies(repository: repository, connectivity: connectivity,
+                               subscription: subscription, chat: chat)
+    }
+
+    /// Клиент сервиса Nebula: `user_id` — Apphud User ID на момент запроса.
+    private func nebulaAPI(service: String, subscription: any SubscriptionService) -> NebulaAPI {
+        // Адрес задан в коде и проверен (docs/task.md, «Контракты API»).
+        let baseURL = URL(string: "https://nebulaapps.site")?.appendingPathComponent(service)
+            ?? URL(fileURLWithPath: "/")
+        return NebulaAPI(
+            client: APIClient(baseURL: baseURL),
+            ownerToken: Secrets.nebulaAPIToken,
+            appID: Self.apiAppID,
+            userID: { await subscription.userID }
         )
     }
+
+    /// `application_id` из ТЗ — под ним приложение заведено в API (не bundle id).
+    static let apiAppID = "com.test.test"
+
+    private func makeChatProvider(_ model: DependencyPlan.Model,
+                                  subscription: any SubscriptionService) -> any ChatProvider {
+        switch model {
+        case .live:
+            return DolaChatProvider(api: nebulaAPI(service: "dola", subscription: subscription))
+        #if DEBUG
+        case let .failing(kind):
+            let retryAfter: Duration? = kind == .rateLimited ? .seconds(30) : nil
+            return FakeChatProvider(script: .fail(APIError(kind: kind, retryAfter: retryAfter), delay: .seconds(1)))
+        case .slowReply:
+            return FakeChatProvider(script: .reply(Self.slowReply, delay: .seconds(4)))
+        #else
+        case .failing, .slowReply:
+            return DolaChatProvider(api: nebulaAPI(service: "dola", subscription: subscription))
+        #endif
+        }
+    }
+
+    #if DEBUG
+    /// Ответ фейка для `-mockSlowReply` (содержимое переписки, не строка интерфейса).
+    private static let slowReply = """
+        **Welcome to the team!**
+
+        Here are a few tips:
+        - Ask questions early;
+        - Meet the team on Monday.
+        """
+    #endif
 
     private func makeSubscription(_ subscription: DependencyPlan.Subscription) -> any SubscriptionService {
         switch subscription {
