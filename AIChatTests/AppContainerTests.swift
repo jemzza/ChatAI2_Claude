@@ -72,6 +72,16 @@ struct DependencyPlanTests {
                 == DependencyPlan(storage: .disk, network: .system, model: .failing(.rateLimited)))
     }
 
+    @Test func subscriptionFlagsSwitchOnlySubscription() {
+        #expect(DependencyPlan(options: .none).subscription == .apphud)
+        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockPremium"]))
+                == DependencyPlan(storage: .disk, network: .system, model: .live, subscription: .fake(isPremium: true)))
+        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockFree"])).subscription
+                == .fake(isPremium: false))
+        // Оба флага — побеждает `-mockPremium`.
+        #expect(LaunchOptions(arguments: ["app", "-mockFree", "-mockPremium"]).mockPremium == true)
+    }
+
     /// Ошибка важнее медленного стрима: сценарий ошибки проверяем независимо.
     @Test func mockErrorWinsOverSlowStream() {
         let options = LaunchOptions(arguments: ["app", "-mockSlowStream", "-mockError", "403"])

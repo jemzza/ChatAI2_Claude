@@ -6,7 +6,7 @@ import XCTest
 final class LaunchUITests: XCTestCase {
     func testLaunchesWithMockData() {
         let app = XCUIApplication()
-        app.launchArguments = ["-mockData"]
+        app.launchArguments = ["-mockData", "-mockFree"]
         app.launch()
         XCTAssertTrue(app.staticTexts["AI Chat"].waitForExistence(timeout: 10))
     }

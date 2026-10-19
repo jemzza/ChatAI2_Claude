@@ -26,14 +26,23 @@ struct DependencyPlan: Hashable, Sendable {
         case slowStream
     }
 
+    enum Subscription: Hashable, Sendable {
+        /// Apphud.
+        case apphud
+        /// `-mockPremium` / `-mockFree`: фейк с заданным статусом.
+        case fake(isPremium: Bool)
+    }
+
     let storage: Storage
     let network: Network
     let model: Model
+    let subscription: Subscription
 
-    init(storage: Storage, network: Network, model: Model) {
+    init(storage: Storage, network: Network, model: Model, subscription: Subscription = .apphud) {
         self.storage = storage
         self.network = network
         self.model = model
+        self.subscription = subscription
     }
 
     init(options: LaunchOptions) {
@@ -44,15 +53,17 @@ struct DependencyPlan: Hashable, Sendable {
         } else {
             model = options.slowStream ? .slowStream : .live
         }
+        subscription = options.mockPremium.map { .fake(isPremium: $0) } ?? .apphud
     }
 }
 
-/// Зависимости, общие для всех экранов. Пока — база и сеть; сервисы чата, видео
-/// и подписки подключаются в своих шагах плана.
+/// Зависимости, общие для всех экранов. Пока — база, сеть и подписка; сервисы чата
+/// и видео подключаются в своих шагах плана.
 @MainActor
 struct AppDependencies {
     let repository: any ChatRepository
     let connectivity: any ConnectivityMonitoring
+    let subscription: any SubscriptionService
 }
 
 extension AppContainer {
@@ -60,10 +71,26 @@ extension AppContainer {
     /// оборванные генерации в `interrupted` раньше, чем на базу подпишутся экраны.
     func makeDependencies() async throws -> AppDependencies {
         let plan = DependencyPlan(options: launchOptions)
+        // Подписка — первой: её `userID` нужен каждому запросу к API.
+        let subscription = makeSubscription(plan.subscription)
         return AppDependencies(
             repository: try await makeRepository(plan.storage),
-            connectivity: makeConnectivity(plan.network)
+            connectivity: makeConnectivity(plan.network),
+            subscription: subscription
         )
+    }
+
+    private func makeSubscription(_ subscription: DependencyPlan.Subscription) -> any SubscriptionService {
+        switch subscription {
+        case .apphud:
+            return ApphudSubscriptionService(apiKey: Secrets.apphudAPIKey)
+        case let .fake(isPremium):
+            #if DEBUG
+            return FakeSubscriptionService(isPremium: isPremium)
+            #else
+            return ApphudSubscriptionService(apiKey: Secrets.apphudAPIKey)
+            #endif
+        }
     }
 
     private func makeRepository(_ storage: DependencyPlan.Storage) async throws -> any ChatRepository {

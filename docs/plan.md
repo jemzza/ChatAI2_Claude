@@ -55,7 +55,7 @@
 
 ## 2. Подписка (Apphud)
 
-- [ ] 2.1 `SubscriptionService` (Domain) + `ApphudSubscriptionService` (Data) +
+- [x] 2.1 `SubscriptionService` (Domain) + `ApphudSubscriptionService` (Data) +
       фейк: старт SDK, `userID` для API, `isPremium` с обновлением после покупки.
       Готово, когда: `isPremium` меняется в фейке → подписчики видят сразу;
       Apphud стартует один раз до первого запроса к API; ViewModel не
@@ -185,3 +185,8 @@ _Сюда записываем, что пошло не так и что реши
   у обоих сервисов и совпадает с данными ТЗ. Код 1.2 (сессии, Keychain)
   удаляем отдельным шагом 1.4. Симулятор здесь не резолвит DNS — пробы
   выполнены консольной программой на Mac (`LiveAPIProbeTests` — тот же код).
+- 2.1: статус подписки — `Apphud.hasPremiumAccess()` (подписка или покупка),
+  обновление — по `Apphud.didUpdateNotification()` вместо `ApphudDelegate`
+  (протокол не `Sendable`). `-mockPremium`/`-mockFree` добавлены сразу (были
+  в 7.1) — нужны UI-тесту, чтобы не стартовать настоящий Apphud. Старт SDK в
+  реальном запуске не проверен: симулятор здесь без DNS.
