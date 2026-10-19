@@ -6,6 +6,7 @@ struct ChatView: View {
     @StateObject private var model: ChatViewModel
     @EnvironmentObject private var router: AppRouter
     @FocusState private var isInputFocused: Bool
+    @State private var isConfirmingDelete = false
     private let subscription: any SubscriptionService
 
     init(chatId: UUID?, prompt: String?, dependencies: AppDependencies) {
@@ -26,7 +27,11 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             ChatHeader(title: "AI Chat", date: model.date, isPinned: model.isPinned) { router.pop() } trailing: {
-                Color.clear.frame(width: 40, height: 40)
+                if model.hasMenu {
+                    chatMenu
+                } else {
+                    Color.clear.frame(width: 40, height: 40)
+                }
             }
             Group {
                 if model.isEmpty {
@@ -43,12 +48,57 @@ struct ChatView: View {
         }
         .background(Color.appBackground.ignoresSafeArea())
         .toast($model.toast)
+        .alert("Delete chat?", isPresented: $isConfirmingDelete) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task {
+                    // Удалили — назад на главный экран (заметка к макету).
+                    if await model.deleteChat() { router.popToRoot() }
+                }
+            }
+        } message: {
+            Text("This chat will be removed from your history.")
+        }
         .task(id: model.chatId) { await model.observe() }
         .onAppear {
             model.onPaywall = { router.showPaywall(from: .premiumAction) }
-            // Новый чат открывается с клавиатурой (заметка к макету).
-            if model.chatId == nil { isInputFocused = true }
+            // Новый чат открывается с клавиатурой (заметка к макету). Фокус — после анимации
+            // перехода: во время push поле ещё не может стать first responder.
+            if model.chatId == nil {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(450))
+                    isInputFocused = true
+                }
+            }
         }
+    }
+
+    /// Меню «…» (макет «AI Chat — Chat Actions»): Share, Pin/Unpin, Delete.
+    private var chatMenu: some View {
+        Menu {
+            ShareLink(item: model.shareText) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            Button {
+                Task { await model.togglePin() }
+            } label: {
+                if model.isPinned {
+                    Label("Unpin chat", systemImage: "pin.slash")
+                } else {
+                    Label("Pin chat", systemImage: "pin")
+                }
+            }
+            Button(role: .destructive) {
+                isConfirmingDelete = true
+            } label: {
+                Label("Delete chat", systemImage: "trash")
+            }
+        } label: {
+            Image("ButtonMore")
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
+        }
+        .accessibilityLabel(Text("Chat actions"))
     }
 
     private var emptyState: some View {

@@ -160,4 +160,37 @@ struct ChatViewModelTests {
 
         try await waitUntil { harness.model.messages.last?.text == "Fixed" }
     }
+
+    // MARK: Меню
+
+    @Test func pinToggleAndShareText() async throws {
+        let harness = makeHarness(script: .reply("Answer"))
+        let observation = observing(harness.model)
+        defer { observation.cancel() }
+        #expect(!harness.model.hasMenu)
+        harness.model.draft = "Question"
+        await harness.model.send()
+        try await waitUntil { harness.model.messages.last?.status == .done && harness.model.hasMenu }
+
+        await harness.model.togglePin()
+        try await waitUntil { harness.model.isPinned }
+        await harness.model.togglePin()
+        try await waitUntil { !harness.model.isPinned }
+
+        #expect(harness.model.shareText == "Question\n\nAnswer")
+    }
+
+    @Test func deleteRemovesChat() async throws {
+        let harness = makeHarness(script: .reply("Answer"))
+        let observation = observing(harness.model)
+        defer { observation.cancel() }
+        harness.model.draft = "Question"
+        await harness.model.send()
+        try await waitUntil { harness.model.hasMenu }
+
+        #expect(await harness.model.deleteChat())
+
+        let chats = try await firstValue(of: harness.repository.observeChats())
+        #expect(chats.isEmpty)
+    }
 }

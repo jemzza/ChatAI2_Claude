@@ -157,12 +157,32 @@
         }
       }
     },
+    "Cancel" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отмена"
+          }
+        }
+      }
+    },
     "Cancel Anytime" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отмена в любой момент"
+          }
+        }
+      }
+    },
+    "Chat actions" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Действия с чатом"
           }
         }
       }
@@ -227,6 +247,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось скопировать"
+          }
+        }
+      }
+    },
+    "Couldn't delete chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось удалить чат"
           }
         }
       }
@@ -300,6 +330,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тёмное"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
+          }
+        }
+      }
+    },
+    "Delete chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить чат"
+          }
+        }
+      }
+    },
+    "Delete chat?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить чат?"
           }
         }
       }
@@ -496,6 +556,16 @@
         }
       }
     },
+    "Pin chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрепить чат"
+          }
+        }
+      }
+    },
     "Pinned" : {
       "localizations" : {
         "ru" : {
@@ -649,6 +719,16 @@
         }
       }
     },
+    "Share" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
+          }
+        }
+      }
+    },
     "Simplify complex information" : {
       "localizations" : {
         "ru" : {
@@ -719,6 +799,16 @@
         }
       }
     },
+    "This chat will be removed from your history." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чат будет удалён из истории."
+          }
+        }
+      }
+    },
     "Too many requests. Please wait a moment and try again." : {
       "localizations" : {
         "ru" : {
@@ -785,6 +875,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открыть доступ"
+          }
+        }
+      }
+    },
+    "Unpin chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открепить чат"
           }
         }
       }

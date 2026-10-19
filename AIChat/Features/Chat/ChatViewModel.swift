@@ -115,6 +115,36 @@ final class ChatViewModel: ObservableObject {
         toast = copied ? ToastMessage(kind: .success, text: "Copied") : ToastMessage(kind: .failure, text: "Copy failed")
     }
 
+    // MARK: Меню чата
+
+    /// Есть что показывать в меню «…» — чат уже создан.
+    var hasMenu: Bool { chat != nil }
+
+    /// Текст для «Share»: переписка целиком, вопросы и ответы по порядку.
+    var shareText: String {
+        messages
+            .filter { !$0.text.isEmpty && $0.status != .generating }
+            .map(\.text)
+            .joined(separator: "\n\n")
+    }
+
+    func togglePin() async {
+        guard let chatId else { return }
+        try? await repository.setPinned(chatId: chatId, at: isPinned ? nil : now())
+    }
+
+    /// Удаляет чат (и отменяет его запрос). Экран после этого закрывается.
+    func deleteChat() async -> Bool {
+        guard let chatId else { return false }
+        do {
+            try await session.deleteChat(id: chatId)
+            return true
+        } catch {
+            toast = ToastMessage(kind: .failure, text: "Couldn't delete chat")
+            return false
+        }
+    }
+
     /// «Retry» у ошибки и «Regenerate» у последнего ответа.
     func retry(_ message: Message) async {
         guard let chatId else { return }
