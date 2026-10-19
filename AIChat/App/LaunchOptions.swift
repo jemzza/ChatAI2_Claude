@@ -5,7 +5,7 @@ import Foundation
 ///
 /// - `-mockData` — репозиторий в памяти с `PreviewData`;
 /// - `-mockOffline` — сеть всегда «нет»;
-/// - `-mockError 429|401|403|500|offline` — LLM отвечает этой ошибкой;
+/// - `-mockError 429|401|402|403|500|offline` — сеть отвечает этой ошибкой;
 /// - `-mockSlowStream` — LLM-фейк с медленным ответом.
 struct LaunchOptions: Hashable, Sendable {
     var useMockData = false
@@ -35,6 +35,7 @@ struct LaunchOptions: Hashable, Sendable {
         switch value {
         case "429": .rateLimited
         case "401": .unauthorized
+        case "402": .paymentRequired
         case "403": .forbidden
         case "500": .server
         case "offline": .offline

@@ -1,18 +1,26 @@
 import Foundation
 
+/// Вид ошибки сети/API. Сырое значение хранится в базе (`MessageRecord`) —
+/// неизвестное значение при чтении становится `unknown`.
 enum ErrorKind: String, Hashable, Sendable {
     /// Нет сети.
     case offline
-    /// 429 — кончился лимит API.
-    case rateLimited
-    /// 401 или ключ отсутствует.
+    /// 401 — сессия не открылась или не обновилась.
     case unauthorized
-    /// 403 — например, регион не поддерживается.
+    /// 402 — у владельца API кончились кредиты.
+    case paymentRequired
+    /// 403.
     case forbidden
+    /// 404 — например, генерация видео не найдена.
+    case notFound
+    /// 422 — сервер не принял параметры запроса.
+    case validation
+    /// 429 — слишком много запросов.
+    case rateLimited
     /// 5xx.
     case server
-    /// Модель на устройстве не поддерживает язык запроса.
-    case unsupportedLanguage
+    /// Ответ пришёл, но не разобрался.
+    case decoding
     case unknown
 }
 

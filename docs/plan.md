@@ -31,7 +31,7 @@
 
 ## 1. Сеть
 
-- [ ] 1.1 `HTTPClient` + `Endpoint` (JSON и multipart) + маппинг в `APIError`
+- [x] 1.1 `HTTPClient` + `Endpoint` (JSON и multipart) + маппинг в `APIError`
       по таблице; тесты на `URLProtocol`-стабе.
       Готово, когда: GET/POST JSON и multipart собираются из `Endpoint`;
       каждый код из таблицы маппинга и `URLError` дают свой `APIError`; тела
@@ -172,3 +172,6 @@ _Сюда записываем, что пошло не так и что реши
 - После 0.5 (решение заказчика): коммиты — Conventional Commits; агент идёт
   по шагам без подтверждения каждого; у шагов — критерии приёмки; после шага —
   отчёт (файлы, сборка/тесты, статусы проверки, ограничения, коммит).
+- 1.1: `ErrorKind` расширен (`paymentRequired`, `notFound`, `validation`,
+  `decoding`), `unsupportedLanguage` убран. Новая `APIError` пока живёт рядом
+  с `LLMError` — `LLMError` уйдёт вместе с `LLMProvider` в 3.2.
