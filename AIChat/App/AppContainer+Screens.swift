@@ -57,13 +57,17 @@ struct DependencyPlan: Hashable, Sendable {
     }
 }
 
-/// Зависимости, общие для всех экранов. Сервис видео подключается в своём шаге плана.
+/// Зависимости, общие для всех экранов.
 @MainActor
 struct AppDependencies {
     let repository: any ChatRepository
     let connectivity: any ConnectivityMonitoring
     let subscription: any SubscriptionService
     let chat: ChatService
+    let videoRepository: any VideoRepository
+    let videoAPI: any VideoAPI
+    let media: any MediaStoring
+    let video: VideoGenerationService
 }
 
 extension AppContainer {
@@ -73,7 +77,8 @@ extension AppContainer {
         let plan = DependencyPlan(options: launchOptions)
         // Подписка — первой: её `userID` нужен каждому запросу к API.
         let subscription = makeSubscription(plan.subscription)
-        let repository = try await makeRepository(plan.storage)
+        let database = try AppDatabase.onDisk()
+        let repository = try await makeRepository(plan.storage, database: database)
         let connectivity = makeConnectivity(plan.network)
         let notifications = NotificationService(
             settings: settings,
@@ -88,8 +93,27 @@ extension AppContainer {
             backgroundTasks: UIKitBackgroundTasks(),
             eventHandler: notifications
         )
+        let videoRepository = GRDBVideoRepository(database: database)
+        let videoAPI = PixverseClient(api: nebulaAPI(service: "pixverse", subscription: subscription),
+                                      catalogCacheURL: Self.templatesCacheURL)
+        let media = try FileMediaStore.standard()
+        let video = VideoGenerationService(
+            repository: videoRepository,
+            api: videoAPI,
+            media: media,
+            connectivity: connectivity,
+            backgroundTasks: UIKitBackgroundTasks(),
+            eventHandler: notifications
+        )
         return AppDependencies(repository: repository, connectivity: connectivity,
-                               subscription: subscription, chat: chat)
+                               subscription: subscription, chat: chat, videoRepository: videoRepository,
+                               videoAPI: videoAPI, media: media, video: video)
+    }
+
+    /// Последний каталог шаблонов — для работы без сети.
+    private static var templatesCacheURL: URL? {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("pixverse-templates.json", isDirectory: false)
     }
 
     /// Клиент сервиса Nebula: `user_id` — Apphud User ID на момент запроса.
@@ -150,17 +174,18 @@ extension AppContainer {
         }
     }
 
-    private func makeRepository(_ storage: DependencyPlan.Storage) async throws -> any ChatRepository {
+    private func makeRepository(_ storage: DependencyPlan.Storage,
+                                database: AppDatabase) async throws -> any ChatRepository {
         switch storage {
         case .disk:
-            return try await GRDBChatRepository.launch(database: AppDatabase.onDisk())
+            return try await GRDBChatRepository.launch(database: database)
         case .previewData:
             #if DEBUG
             let repository = PreviewData.repository()
             repository.markGeneratingAsInterrupted()
             return repository
             #else
-            return try await GRDBChatRepository.launch(database: AppDatabase.onDisk())
+            return try await GRDBChatRepository.launch(database: database)
             #endif
         }
     }

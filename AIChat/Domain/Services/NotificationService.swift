@@ -67,3 +67,14 @@ final class NotificationService: ChatEventHandling {
                                                authorization: await scheduler.authorization())
     }
 }
+
+extension NotificationService: VideoEventHandling {
+    func videoDidFinish(generationId: UUID, templateName: String) async {
+        guard await shouldNotify(isEnabled: settings.notifyOnReply) else { return }
+        await scheduler.schedule(LocalNotification(
+            title: String(localized: "Your video is ready"),
+            body: templateName,
+            chatId: nil
+        ))
+    }
+}

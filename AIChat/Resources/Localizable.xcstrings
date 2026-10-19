@@ -168,6 +168,16 @@
           }
         }
       }
+    },
+    "Your video is ready" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше видео готово"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

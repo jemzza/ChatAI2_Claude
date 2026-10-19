@@ -47,4 +47,22 @@ struct ImageDownscalerTests {
     @Test func notAnImageIsRejected() {
         #expect(ImageDownscaler.jpeg(from: Data("hello".utf8)) == nil)
     }
+
+    @Test(arguments: [(VideoAspect.landscape, 1920, 1080), (.portrait, 1080, 1920), (.square, 1080, 1080)])
+    func cropsToVideoAspect(aspect: VideoAspect, width: Int, height: Int) throws {
+        // Исходник 3000×2000 → длинная сторона 1920 → 1920×1280, затем кроп по центру.
+        let source = try png(width: 3000, height: 2000)
+
+        let jpeg = try #require(ImageDownscaler.jpeg(from: source, croppedTo: aspect.ratio, maxPixelSize: 1920))
+
+        let size = try pixelSize(of: jpeg)
+        #expect(size.type == "public.jpeg")
+        #expect(abs(Double(size.width) / Double(size.height) - aspect.ratio) < 0.01)
+        #expect(max(size.width, size.height) <= 1920)
+        _ = (width, height)
+    }
+
+    @Test func croppingRejectsNonImage() {
+        #expect(ImageDownscaler.jpeg(from: Data("text".utf8), croppedTo: 1, maxPixelSize: 100) == nil)
+    }
 }
