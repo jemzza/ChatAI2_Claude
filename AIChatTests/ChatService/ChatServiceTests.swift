@@ -99,7 +99,7 @@ struct ChatServiceTests {
         let chatId = try await harness.service.send("Go", inChat: nil)
         _ = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
 
-        #expect(harness.repository.updateStatuses == [.streaming, .done])
+        #expect(harness.repository.updateStatuses == [.generating, .done])
     }
 
     /// Токен каждые 300 мс при интервале 500 мс: пишем на 1-м, 3-м и 5-м токене + финал.
@@ -112,7 +112,7 @@ struct ChatServiceTests {
         let chatId = try await harness.service.send("Go", inChat: nil)
         let messages = try await messages(harness, chatId: chatId) { $0.last?.status == .done }
 
-        #expect(harness.repository.updateStatuses == [.streaming, .streaming, .streaming, .done])
+        #expect(harness.repository.updateStatuses == [.generating, .generating, .generating, .done])
         #expect(messages.last?.text == "1 2 3 4 5")
     }
 

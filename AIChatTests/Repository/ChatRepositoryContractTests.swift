@@ -127,6 +127,26 @@ struct ChatRepositoryContractTests {
     }
 
     @Test(arguments: RepositoryKind.allCases)
+    func pinAndUnpinChat(kind: RepositoryKind) async throws {
+        let repository = kind.make()
+        let (chat, _) = try await seedChat(repository)
+        let pinnedAt = Date(timeIntervalSinceReferenceDate: 500.25)
+
+        try await repository.setPinned(chatId: chat.id, at: pinnedAt)
+        let pinned = try await firstValue(of: repository.observeChats()) { $0.first?.pinnedAt != nil }
+        #expect(pinned.first?.pinnedAt == pinnedAt)
+        #expect(pinned.first?.updatedAt == chat.updatedAt)
+
+        try await repository.setPinned(chatId: chat.id, at: nil)
+        _ = try await firstValue(of: repository.observeChats()) { $0.first?.pinnedAt == nil }
+
+        await #expect(throws: ChatNotFound(id: chat.id)) {
+            try await repository.deleteChat(id: chat.id)
+            try await repository.setPinned(chatId: chat.id, at: pinnedAt)
+        }
+    }
+
+    @Test(arguments: RepositoryKind.allCases)
     func deleteChatCascadesAndIsIdempotent(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chat, first) = try await seedChat(repository)
@@ -174,7 +194,7 @@ struct ChatRepositoryContractTests {
     func updateMessageChangesTextStatusAndFailure(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chat, _) = try await seedChat(repository)
-        let answer = reply(chat, "", status: .streaming)
+        let answer = reply(chat, "", status: .generating)
         try await repository.insertMessage(answer)
         let failure = MessageFailure(kind: .rateLimited, retryAt: at(60))
 
@@ -191,7 +211,7 @@ struct ChatRepositoryContractTests {
     func updateMessageAfterChatDeletionThrowsMessageNotFound(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chat, _) = try await seedChat(repository)
-        let answer = reply(chat, "", status: .streaming)
+        let answer = reply(chat, "", status: .generating)
         try await repository.insertMessage(answer)
 
         try await repository.deleteChat(id: chat.id)
@@ -218,7 +238,7 @@ struct ChatRepositoryContractTests {
         let cancelledEmpty = reply(chat, "", status: .cancelled, at: 5)
         let pending = userMessage(chat, "queued", status: .pending, at: 6)
         let question = userMessage(chat, "question", status: .sent, at: 7)
-        let current = reply(chat, "", status: .streaming, at: 8)
+        let current = reply(chat, "", status: .generating, at: 8)
         let after = userMessage(chat, "after", status: .sent, at: 9)
         for message in [done, failed, interrupted, cancelled, cancelledEmpty, pending, question, current, after] {
             try await repository.insertMessage(message)
@@ -241,7 +261,7 @@ struct ChatRepositoryContractTests {
             try await repository.insertMessage(message)
             inserted.append(message)
         }
-        let current = reply(chat, "", status: .streaming, at: 100)
+        let current = reply(chat, "", status: .generating, at: 100)
         try await repository.insertMessage(current)
 
         let history = try await repository.history(chatId: chat.id, before: current.id, limit: 3)
@@ -270,7 +290,7 @@ struct ChatRepositoryContractTests {
         let earlier = userMessage(chatB, "earlier", status: .pending, at: 10)
         try await repository.insertMessage(later)
         try await repository.insertMessage(earlier)
-        try await repository.insertMessage(reply(chatA, status: .streaming, at: 30))
+        try await repository.insertMessage(reply(chatA, status: .generating, at: 30))
 
         #expect(try await repository.pendingMessages().map(\.id) == [earlier.id, later.id])
     }
@@ -281,8 +301,8 @@ struct ChatRepositoryContractTests {
         let chat = makeChat()
         let question = userMessage(chat, status: .pending, at: 0)
         try await repository.insertChat(chat, firstMessage: question)
-        let answer = reply(chat, "", status: .streaming, at: 1)
-        let duplicateAnswer = reply(chat, "", status: .streaming, at: 2)
+        let answer = reply(chat, "", status: .generating, at: 1)
+        let duplicateAnswer = reply(chat, "", status: .generating, at: 2)
 
         #expect(try await repository.claimPending(messageId: question.id, reply: answer))
         #expect(try await repository.claimPending(messageId: question.id, reply: duplicateAnswer) == false)
@@ -297,11 +317,11 @@ struct ChatRepositoryContractTests {
     func claimPendingRejectsNonPendingAndMissing(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chat, sent) = try await seedChat(repository)
-        #expect(try await repository.claimPending(messageId: sent.id, reply: reply(chat, status: .streaming)) == false)
+        #expect(try await repository.claimPending(messageId: sent.id, reply: reply(chat, status: .generating)) == false)
 
         let unknown = UUID()
         await #expect(throws: MessageNotFound(id: unknown)) {
-            try await repository.claimPending(messageId: unknown, reply: reply(chat, status: .streaming))
+            try await repository.claimPending(messageId: unknown, reply: reply(chat, status: .generating))
         }
     }
 
@@ -319,12 +339,12 @@ struct ChatRepositoryContractTests {
         #expect(try await repository.claimRetry(assistantMessageId: answer.id) == false)
 
         let stored = try await message(repository, chat, id: answer.id)
-        #expect(stored?.status == .streaming)
+        #expect(stored?.status == .generating)
         #expect(stored?.text == "")
         #expect(stored?.failure == nil)
     }
 
-    @Test(arguments: RepositoryKind.allCases, [MessageStatus.streaming])
+    @Test(arguments: RepositoryKind.allCases, [MessageStatus.generating])
     func claimRetryRejectsNonRetryableReply(kind: RepositoryKind, status: MessageStatus) async throws {
         let repository = kind.make()
         let (chat, _) = try await seedChat(repository)
@@ -350,20 +370,20 @@ struct ChatRepositoryContractTests {
     // MARK: Старт приложения
 
     @Test(arguments: RepositoryKind.allCases)
-    func markStreamingAsInterruptedChangesOnlyStreaming(kind: RepositoryKind) async throws {
+    func markGeneratingAsInterruptedChangesOnlyStreaming(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chatA, _) = try await seedChat(repository, at: 0)
         let (chatB, _) = try await seedChat(repository, at: 1)
-        let streamingA = reply(chatA, "a", status: .streaming, at: 2)
-        let streamingB = reply(chatB, "b", status: .streaming, at: 3)
+        let streamingA = reply(chatA, "a", status: .generating, at: 2)
+        let streamingB = reply(chatB, "b", status: .generating, at: 3)
         let alreadyInterrupted = reply(chatA, "c", status: .interrupted, at: 4)
         let done = reply(chatB, "d", status: .done, at: 5)
         for message in [streamingA, streamingB, alreadyInterrupted, done] {
             try await repository.insertMessage(message)
         }
 
-        #expect(try await repository.markStreamingAsInterrupted() == 2)
-        #expect(try await repository.markStreamingAsInterrupted() == 0)
+        #expect(try await repository.markGeneratingAsInterrupted() == 2)
+        #expect(try await repository.markGeneratingAsInterrupted() == 0)
 
         #expect(try await message(repository, chatA, id: streamingA.id)?.status == .interrupted)
         #expect(try await message(repository, chatB, id: streamingB.id)?.status == .interrupted)
@@ -603,7 +623,7 @@ struct ChatRepositoryContractTests {
         #expect(try await repository.pendingMessages().map(\.images) == [pending.images])
 
         // Ответ из outbox: фото вопроса остаются на месте, стрим их не трогает.
-        let streaming = reply(chat, "", status: .streaming, at: 3)
+        let streaming = reply(chat, "", status: .generating, at: 3)
         #expect(try await repository.claimPending(messageId: pending.id, reply: streaming))
         try await repository.updateMessage(id: streaming.id, text: "A cat", status: .done, failure: nil)
         let history = try await repository.history(chatId: chat.id, before: streaming.id, limit: 10)

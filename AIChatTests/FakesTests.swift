@@ -101,7 +101,7 @@ struct FakeConnectivityMonitorTests {
 struct PreviewDataTests {
     @Test func coversEveryMessageStatus() {
         let statuses = Set(PreviewData.messages.map(\.status))
-        #expect(statuses == [.pending, .sent, .streaming, .done, .cancelled, .failed, .interrupted])
+        #expect(statuses == [.pending, .sent, .generating, .done, .cancelled, .failed, .interrupted])
     }
 
     @Test func seedsRepository() async throws {

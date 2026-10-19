@@ -20,6 +20,9 @@ protocol ChatRepository: Sendable {
     func insertChat(_ chat: Chat, firstMessage: Message) async throws
     /// - Throws: `ChatNotFound`.
     func renameChat(id: UUID, title: String) async throws
+    /// Закрепляет (`pinnedAt` — время) или открепляет (`nil`) чат. `updatedAt` не меняется.
+    /// - Throws: `ChatNotFound`.
+    func setPinned(chatId: UUID, at pinnedAt: Date?) async throws
     /// Удаляет чат и каскадом его сообщения. Отсутствующий чат — не ошибка.
     func deleteChat(id: UUID) async throws
     /// Переносит чат в папку; `folderId == nil` — в «Recents». `updatedAt` не меняется.
@@ -58,16 +61,16 @@ protocol ChatRepository: Sendable {
 
     /// Сообщения пользователя в статусе `pending`, старые первыми.
     func pendingMessages() async throws -> [Message]
-    /// Атомарно: user `pending` → `sent` и вставка `reply` (assistant, `streaming`).
+    /// Атомарно: user `pending` → `sent` и вставка `reply` (assistant, `generating`).
     /// - Returns: `false`, если сообщение уже не `pending` (забрали раньше).
     /// - Throws: `MessageNotFound`.
     func claimPending(messageId: UUID, reply: Message) async throws -> Bool
-    /// Атомарно: ответ `failed`/`interrupted`/`cancelled` → `streaming`, очищает `text` и `failure`.
-    /// - Returns: `false`, если ответ уже `streaming`/`done` или это не ответ ассистента.
+    /// Атомарно: ответ `failed`/`interrupted`/`cancelled` → `generating`, очищает `text` и `failure`.
+    /// - Returns: `false`, если ответ уже `generating`/`done` или это не ответ ассистента.
     /// - Throws: `MessageNotFound`.
     func claimRetry(assistantMessageId: UUID) async throws -> Bool
-    /// При запуске: все `streaming` → `interrupted`.
+    /// При запуске: все `generating` → `interrupted`.
     /// - Returns: сколько сообщений изменено.
     @discardableResult
-    func markStreamingAsInterrupted() async throws -> Int
+    func markGeneratingAsInterrupted() async throws -> Int
 }

@@ -153,6 +153,14 @@ final class InMemoryChatRepository: ChatRepository {
         }
     }
 
+    func setPinned(chatId: UUID, at pinnedAt: Date?) throws {
+        try state.withLock { state in
+            guard state.chats[chatId] != nil else { throw ChatNotFound(id: chatId) }
+            state.chats[chatId]?.pinnedAt = pinnedAt
+            state.notify(chatIds: [], chatsChanged: true)
+        }
+    }
+
     func deleteChat(id: UUID) {
         state.withLock { state in
             guard state.chats.removeValue(forKey: id) != nil else { return }
@@ -280,7 +288,7 @@ final class InMemoryChatRepository: ChatRepository {
                 throw MessageNotFound(id: assistantMessageId)
             }
             guard stored.message.role == .assistant, stored.message.status.isRetryable else { return false }
-            stored.message.status = .streaming
+            stored.message.status = .generating
             stored.message.text = ""
             stored.message.failure = nil
             state.messages[assistantMessageId] = stored
@@ -290,11 +298,11 @@ final class InMemoryChatRepository: ChatRepository {
     }
 
     @discardableResult
-    func markStreamingAsInterrupted() -> Int {
+    func markGeneratingAsInterrupted() -> Int {
         state.withLock { state in
             var changedChats = Set<UUID>()
             var count = 0
-            for (id, var stored) in state.messages where stored.message.status == .streaming {
+            for (id, var stored) in state.messages where stored.message.status == .generating {
                 stored.message.status = .interrupted
                 state.messages[id] = stored
                 changedChats.insert(stored.message.chatId)

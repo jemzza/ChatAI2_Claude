@@ -38,7 +38,7 @@ enum PreviewData {
         Message(chatId: swiftChat.id, role: .user, text: "And how is it different from a class with a lock?",
                 status: .sent, createdAt: now.addingTimeInterval(-550)),
         Message(chatId: swiftChat.id, role: .assistant, text: "The compiler checks isolation for you, so",
-                status: .streaming, createdAt: now.addingTimeInterval(-540)),
+                status: .generating, createdAt: now.addingTimeInterval(-540)),
 
         // Ошибки и прерывания.
         Message(chatId: errorsChat.id, role: .user, text: "Plan a weekend in Lisbon",

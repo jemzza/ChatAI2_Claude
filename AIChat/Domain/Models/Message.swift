@@ -7,23 +7,23 @@ enum MessageRole: String, Hashable, Sendable {
 
 /// Два автомата состояний в одном перечислении (одна колонка в БД):
 /// - user: `pending` → `sent`;
-/// - assistant: `streaming` → `done` | `cancelled` | `failed` | `interrupted`,
-///   повтор возвращает ответ в `streaming`.
+/// - assistant: `generating` → `done` | `cancelled` | `failed` | `interrupted`,
+///   повтор возвращает ответ в `generating`.
 enum MessageStatus: String, Hashable, Sendable {
     case pending
     case sent
-    case streaming
+    case generating
     case done
     case cancelled
     case failed
     case interrupted
 
     /// Ответ ассистента в этом статусе можно перезапросить (`done` — перегенерация).
-    /// Только `streaming` нельзя: так второй «Retry» во время генерации ничего не делает.
+    /// Только `generating` нельзя: так второй «Retry» во время генерации ничего не делает.
     var isRetryable: Bool {
         switch self {
         case .failed, .interrupted, .cancelled, .done: true
-        case .pending, .sent, .streaming: false
+        case .pending, .sent, .generating: false
         }
     }
 }

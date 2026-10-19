@@ -176,13 +176,13 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
         return sent
     }
 
-    /// Атомарно `pending` → `sent` + ответ `streaming`; `nil` — сообщение уже забрали.
+    /// Атомарно `pending` → `sent` + ответ `generating`; `nil` — сообщение уже забрали.
     private func claimAndGenerate(
         _ message: Message,
         provider: (any LLMProvider)? = nil
     ) async throws -> Task<Void, Never>? {
         // Ответ сразу после своего вопроса, даже если за ним уже стоят другие `pending`.
-        let reply = Message(chatId: message.chatId, role: .assistant, text: "", status: .streaming,
+        let reply = Message(chatId: message.chatId, role: .assistant, text: "", status: .generating,
                             createdAt: message.createdAt.addingTimeInterval(0.001))
         guard try await repository.claimPending(messageId: message.id, reply: reply) else { return nil }
         return startGeneration(chatId: message.chatId, messageId: reply.id, provider: provider ?? self.provider)
@@ -222,7 +222,7 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
                 let instant = clock.now
                 if lastWrite.map({ $0.duration(to: instant) >= configuration.writeInterval }) ?? true {
                     lastWrite = instant
-                    try await repository.updateMessage(id: messageId, text: text, status: .streaming, failure: nil)
+                    try await repository.updateMessage(id: messageId, text: text, status: .generating, failure: nil)
                 }
             }
         } catch is MessageNotFound {
@@ -254,7 +254,7 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
                 try await repository.updateMessage(id: messageId, text: text, status: status, failure: finalFailure)
                 return true
             } catch {
-                // `MessageNotFound` — чат удалён; прочее — ответ останется `streaming`
+                // `MessageNotFound` — чат удалён; прочее — ответ останется `generating`
                 // и при следующем запуске станет `interrupted`.
                 return false
             }

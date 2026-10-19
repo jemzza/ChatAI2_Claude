@@ -11,6 +11,8 @@ struct ChatRecord: Codable, Hashable, Sendable {
     var updatedAt: Date
     /// Колонка из миграции v2; `nil` — чат в «Recents».
     var folderId: UUID?
+    /// Колонка из миграции v4; `nil` — не закреплён.
+    var pinnedAt: Date?
 
     enum Columns {
         static let id = Column(CodingKeys.id)
@@ -18,6 +20,7 @@ struct ChatRecord: Codable, Hashable, Sendable {
         static let createdAt = Column(CodingKeys.createdAt)
         static let updatedAt = Column(CodingKeys.updatedAt)
         static let folderId = Column(CodingKeys.folderId)
+        static let pinnedAt = Column(CodingKeys.pinnedAt)
     }
 }
 
@@ -40,10 +43,11 @@ extension ChatRecord {
         createdAt = chat.createdAt
         updatedAt = chat.updatedAt
         folderId = chat.folderId
+        pinnedAt = chat.pinnedAt
     }
 
     var chat: Chat {
-        Chat(id: id, title: title, createdAt: createdAt, updatedAt: updatedAt, folderId: folderId)
+        Chat(id: id, title: title, createdAt: createdAt, updatedAt: updatedAt, folderId: folderId, pinnedAt: pinnedAt)
     }
 
     /// Чаты, новые (по `updatedAt`) сверху.

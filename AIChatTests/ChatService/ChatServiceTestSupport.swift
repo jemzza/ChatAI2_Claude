@@ -60,6 +60,9 @@ final class RecordingRepository: ChatRepository {
         try await base.insertChat(chat, firstMessage: firstMessage)
     }
     func renameChat(id: UUID, title: String) async throws { try await base.renameChat(id: id, title: title) }
+    func setPinned(chatId: UUID, at pinnedAt: Date?) async throws {
+        try await base.setPinned(chatId: chatId, at: pinnedAt)
+    }
     func deleteChat(id: UUID) async throws { try await base.deleteChat(id: id) }
     func deleteAll() async throws { try await base.deleteAll() }
     func observeSidebar() -> AsyncStream<SidebarSnapshot> { base.observeSidebar() }
@@ -87,7 +90,7 @@ final class RecordingRepository: ChatRepository {
     func claimRetry(assistantMessageId: UUID) async throws -> Bool {
         try await base.claimRetry(assistantMessageId: assistantMessageId)
     }
-    func markStreamingAsInterrupted() async throws -> Int { try await base.markStreamingAsInterrupted() }
+    func markGeneratingAsInterrupted() async throws -> Int { try await base.markGeneratingAsInterrupted() }
 }
 
 /// Фоновые задачи под контролем теста: можно «забрать время» у генерации.

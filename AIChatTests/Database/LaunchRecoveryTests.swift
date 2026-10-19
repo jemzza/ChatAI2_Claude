@@ -15,12 +15,12 @@ struct LaunchRecoveryTests {
 
         let chat = Chat(id: UUID(), title: "Chat", createdAt: t0, updatedAt: t0)
         let question = Message(chatId: chat.id, role: .user, text: "Hi", status: .sent, createdAt: t0)
-        let streaming = Message(chatId: chat.id, role: .assistant, text: "Half an ans", status: .streaming,
+        let streaming = Message(chatId: chat.id, role: .assistant, text: "Half an ans", status: .generating,
                                 createdAt: t0.addingTimeInterval(1))
         let done = Message(chatId: chat.id, role: .assistant, text: "Done", status: .done,
                            createdAt: t0.addingTimeInterval(2))
 
-        // Первый «запуск»: ответ остался в `streaming`, процесс завершился.
+        // Первый «запуск»: ответ остался в `generating`, процесс завершился.
         do {
             let repository = GRDBChatRepository(database: try AppDatabase.onDisk(at: url))
             try await repository.insertChat(chat, firstMessage: question)

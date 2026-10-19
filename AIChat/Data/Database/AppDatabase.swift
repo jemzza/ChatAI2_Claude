@@ -102,6 +102,15 @@ struct AppDatabase: Sendable {
                 t.column("data", .blob).notNull()
             }
         }
+
+        migrator.registerMigration("v4") { db in
+            // Закреплённые чаты (секция «Pinned» в истории).
+            try db.alter(table: ChatRecord.databaseTableName) { t in
+                t.add(column: "pinnedAt", .double)
+            }
+            // Ответ теперь приходит целиком: статус «идёт генерация» переименован.
+            try db.execute(sql: "UPDATE message SET status = 'generating' WHERE status = 'streaming'")
+        }
         return migrator
     }
 }

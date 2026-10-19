@@ -28,7 +28,7 @@ struct AppDatabaseTests {
         let queue = try DatabaseQueue()
         _ = try AppDatabase(queue)
         _ = try AppDatabase(queue)
-        #expect(try queue.read { try AppDatabase.migrator.appliedIdentifiers($0) } == ["v1", "v2", "v3"])
+        #expect(try queue.read { try AppDatabase.migrator.appliedIdentifiers($0) } == ["v1", "v2", "v3", "v4"])
     }
 
     @Test func recordsRoundTripDomainModels() throws {
@@ -204,7 +204,7 @@ struct AppDatabaseTests {
         let database = try AppDatabase(queue)
 
         try await queue.read { db in
-            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3"])
+            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4"])
             #expect(try ChatRecord.byLastActivity().fetchAll(db).map(\.chat) == [chatB, chatA])
             #expect(try MessageRecord.chronological().fetchAll(db).map { try $0.message() } == stored)
             #expect(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM chat WHERE folderId IS NOT NULL") == 0)
@@ -223,6 +223,40 @@ struct AppDatabaseTests {
         let snapshot = try await firstValue(of: repository.observeSidebar()) { $0.recents.count == 1 }
         #expect(snapshot.folders.first?.chats.map(\.id) == [chatA.id])
         #expect(snapshot.recents.map(\.id) == [chatB.id])
+    }
+
+    /// База v3 с данными и оборванным стримом: v4 добавляет `pinnedAt` (у всех `nil`)
+    /// и переводит `streaming` → `generating`, ничего не теряя.
+    @Test func v4AddsPinnedAndRenamesStreamingStatus() async throws {
+        let queue = try DatabaseQueue()
+        try AppDatabase.migrator.migrate(queue, upTo: "v3")
+        let chat = makeChat()
+        let replyId = UUID()
+        let questionId = UUID()
+        try await queue.write { db in
+            // Сырым SQL: `ChatRecord` уже знает `pinnedAt`, а база ещё на v3.
+            try db.execute(
+                sql: "INSERT INTO chat (id, title, createdAt, updatedAt) VALUES (?, ?, ?, ?)",
+                arguments: [chat.id, chat.title, chat.createdAt.databaseTimestamp, chat.updatedAt.databaseTimestamp]
+            )
+            for (id, role, status, text) in [(questionId, "user", "sent", "Hi"), (replyId, "assistant", "streaming", "Hal")] {
+                try db.execute(
+                    sql: "INSERT INTO message (id, chatId, role, text, status, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+                    arguments: [id, chat.id, role, text, status, t0.databaseTimestamp]
+                )
+            }
+        }
+
+        _ = try AppDatabase(queue)
+
+        try await queue.read { db throws in
+            #expect(try AppDatabase.migrator.appliedIdentifiers(db).contains("v4"))
+            #expect(try ChatRecord.fetchAll(db).map(\.chat) == [chat])
+            let messages = try MessageRecord.fetchAll(db).map { try $0.message() }
+            #expect(messages.first { $0.id == replyId }?.status == .generating)
+            #expect(messages.first { $0.id == replyId }?.text == "Hal")
+            #expect(messages.first { $0.id == questionId }?.status == .sent)
+        }
     }
 
     /// База из main до слияния папок: применены v1 и v3 (фото), v2 (папки) — нет.
@@ -251,7 +285,7 @@ struct AppDatabaseTests {
         _ = try AppDatabase(queue)
 
         try await queue.read { db throws in
-            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3"])
+            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4"])
             #expect(try db.tableExists("folder"))
             #expect(try db.tableExists("attachment"))
             #expect(try ChatRecord.fetchAll(db).map(\.chat) == [chat])

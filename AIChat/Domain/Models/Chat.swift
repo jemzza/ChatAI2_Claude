@@ -10,4 +10,6 @@ struct Chat: Identifiable, Hashable, Sendable {
     var updatedAt: Date
     /// Папка; `nil` — чат в «Recents».
     var folderId: UUID? = nil
+    /// Когда закреплён; `nil` — не закреплён. Закреплённые — в секции «Pinned» истории.
+    var pinnedAt: Date? = nil
 }

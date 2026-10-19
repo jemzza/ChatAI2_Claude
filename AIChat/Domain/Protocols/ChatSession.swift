@@ -2,7 +2,7 @@ import Foundation
 
 /// Живой текст ответа, который сейчас стримится. Существует только в памяти
 /// (исключение из offline-first): ViewModel накладывает его поверх сообщения
-/// со статусом `streaming`, пока в базе лежит более старая версия текста.
+/// со статусом `generating`, пока в базе лежит более старая версия текста.
 struct StreamingDraft: Hashable, Sendable {
     let messageId: UUID
     let text: String
@@ -16,7 +16,7 @@ protocol ChatSession: AnyObject {
     /// `nil` — в этом чате сейчас ничего не стримится.
     func draftUpdates(chatId: UUID) -> AsyncStream<StreamingDraft?>
 
-    /// Отправляет сообщение пользователя. Есть сеть — сообщение `sent` и ответ `streaming`
+    /// Отправляет сообщение пользователя. Есть сеть — сообщение `sent` и ответ `generating`
     /// (генерацией владеет сервис); нет — сообщение `pending`.
     /// - Parameter images: фото во вложении (уже уменьшенные), не больше `ImageAttachment.maxPerMessage`.
     /// - Parameter chatId: `nil` — новый чат: создаётся вместе с первым сообщением.

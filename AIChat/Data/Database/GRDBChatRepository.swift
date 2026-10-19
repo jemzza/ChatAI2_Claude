@@ -16,7 +16,7 @@ final class GRDBChatRepository: ChatRepository {
     /// умер, переводятся в `interrupted` раньше, чем кто-то подпишется на базу.
     static func launch(database: AppDatabase) async throws -> GRDBChatRepository {
         let repository = GRDBChatRepository(database: database)
-        try await repository.markStreamingAsInterrupted()
+        try await repository.markGeneratingAsInterrupted()
         return repository
     }
 
@@ -83,6 +83,13 @@ final class GRDBChatRepository: ChatRepository {
             try ChatRecord.filter(key: id).updateAll(db, ChatRecord.Columns.title.set(to: title))
         }
         guard changed > 0 else { throw ChatNotFound(id: id) }
+    }
+
+    func setPinned(chatId: UUID, at pinnedAt: Date?) async throws {
+        let changed = try await writer.write { db in
+            try ChatRecord.filter(key: chatId).updateAll(db, ChatRecord.Columns.pinnedAt.set(to: pinnedAt?.databaseTimestamp))
+        }
+        guard changed > 0 else { throw ChatNotFound(id: chatId) }
     }
 
     func deleteChat(id: UUID) async throws {
@@ -216,7 +223,7 @@ final class GRDBChatRepository: ChatRepository {
             guard stored.role == MessageRole.assistant.rawValue,
                   MessageStatus(rawValue: stored.status)?.isRetryable == true else { return false }
             try MessageRecord.filter(key: assistantMessageId).updateAll(db, [
-                MessageRecord.Columns.status.set(to: MessageStatus.streaming.rawValue),
+                MessageRecord.Columns.status.set(to: MessageStatus.generating.rawValue),
                 MessageRecord.Columns.text.set(to: ""),
                 MessageRecord.Columns.failureKind.set(to: nil),
                 MessageRecord.Columns.failureRetryAt.set(to: nil),
@@ -226,10 +233,10 @@ final class GRDBChatRepository: ChatRepository {
     }
 
     @discardableResult
-    func markStreamingAsInterrupted() async throws -> Int {
+    func markGeneratingAsInterrupted() async throws -> Int {
         try await writer.write { db in
             try MessageRecord
-                .filter(MessageRecord.Columns.status == MessageStatus.streaming.rawValue)
+                .filter(MessageRecord.Columns.status == MessageStatus.generating.rawValue)
                 .updateAll(db, MessageRecord.Columns.status.set(to: MessageStatus.interrupted.rawValue))
         }
     }

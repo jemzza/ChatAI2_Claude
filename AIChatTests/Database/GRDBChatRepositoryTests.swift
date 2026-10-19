@@ -23,7 +23,7 @@ struct GRDBChatRepositoryTests {
 
         let results = try await withThrowingTaskGroup(of: Bool.self) { group in
             for index in 0..<10 {
-                let reply = Message(chatId: chat.id, role: .assistant, text: "", status: .streaming,
+                let reply = Message(chatId: chat.id, role: .assistant, text: "", status: .generating,
                                     createdAt: t0.addingTimeInterval(Double(index + 1)))
                 group.addTask { try await repository.claimPending(messageId: question.id, reply: reply) }
             }
