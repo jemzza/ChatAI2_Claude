@@ -86,7 +86,7 @@ NO_PAUSE=1 ./Build.command
 - **Слои:** `App/` (композиция, `AppContainer`, роутинг), `Features/<Name>/`
   (View + ViewModel), `Domain/` (модели, протоколы, сервисы — без зависимостей
   от UIKit/GRDB/Apphud), `Data/` (GRDB, HTTP-клиент, Dola, PixVerse, Apphud,
-  Keychain, секреты), `Features/Shared/` — переиспользуемые компоненты.
+  секреты), `Features/Shared/` — переиспользуемые компоненты.
 - Зависимости передаются через инициализаторы и протоколы. Никаких синглтонов,
   кроме `AppContainer` в точке входа (и вызова `Apphud.start` внутри
   `ApphudSubscriptionService`). DI-фреймворки не использовать.
@@ -133,7 +133,7 @@ NO_PAUSE=1 ./Build.command
 - Не добавляй токены в URL, `print`, тексты ошибок, тесты, коммиты, доки.
   Тест ключей проверяет только форму (префиксы `eyJ` / `app_`, длина),
   значения сводятся к `Bool` до `#expect`.
-- Access/refresh-токены клиентской сессии — только в Keychain.
+- Токен владельца уходит только в заголовок `Authorization` (`NebulaAPI`), никогда — в query.
 - Перед коммитом `git grep -lE "eyJ[A-Za-z0-9_-]{20,}|app_[A-Za-z0-9]{20,}"`
   должен быть пуст (только `-l`, чтобы не печатать найденное).
 
