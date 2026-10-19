@@ -97,6 +97,16 @@
         }
       }
     },
+    "Animate" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оживить"
+          }
+        }
+      }
+    },
     "Answers, emails, ideas and plans in seconds" : {
       "localizations" : {
         "ru" : {
@@ -117,12 +127,12 @@
         }
       }
     },
-    "Ask anything…" : {
+    "Ask anything..." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Спросите что угодно…"
+            "value" : "Спросите что угодно..."
           }
         }
       }
@@ -355,6 +365,16 @@
         }
       }
     },
+    "PRO" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRO"
+          }
+        }
+      }
+    },
     "Page %lld of %lld" : {
       "localizations" : {
         "ru" : {
@@ -439,6 +459,16 @@
         }
       }
     },
+    "Ready in seconds" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово за секунды"
+          }
+        }
+      }
+    },
     "Restore Purchases" : {
       "localizations" : {
         "ru" : {
@@ -519,6 +549,16 @@
         }
       }
     },
+    "Templates" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблоны"
+          }
+        }
+      }
+    },
     "Terms of Use" : {
       "localizations" : {
         "ru" : {
@@ -535,6 +575,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Повторить"
+          }
+        }
+      }
+    },
+    "Turn Photo\ninto Video" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фото\nв видео"
           }
         }
       }
@@ -589,12 +639,12 @@
         }
       }
     },
-    "Your AI tools, ready to go" : {
+    "Your AI tools,\nready to go" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ваши AI-инструменты готовы к работе"
+            "value" : "Ваши AI-инструменты\nготовы к работе"
           }
         }
       }

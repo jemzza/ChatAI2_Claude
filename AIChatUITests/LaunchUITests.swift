@@ -1,7 +1,7 @@
 import XCTest
 
 /// Поток первого запуска: сплэш → онбординг → пейвол → главный экран.
-/// Пейвол и главный пока — заглушки; сценарии экранов добавляются вместе с ними.
+/// Сценарии остальных экранов добавляются вместе с ними.
 @MainActor
 final class LaunchUITests: XCTestCase {
     func testFirstLaunchGoesThroughOnboardingAndPaywall() {
@@ -21,12 +21,12 @@ final class LaunchUITests: XCTestCase {
         XCTAssertTrue(close.waitForExistence(timeout: 5))
         close.tap()
 
-        XCTAssertTrue(app.staticTexts["Your AI tools, ready to go"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Your AI tools")).firstMatch.waitForExistence(timeout: 5))
 
         // Повторный запуск — сразу главный экран.
         app.terminate()
         app.launchArguments = ["-mockData", "-mockFree"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Your AI tools, ready to go"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Your AI tools")).firstMatch.waitForExistence(timeout: 10))
     }
 }

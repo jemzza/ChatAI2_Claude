@@ -19,9 +19,7 @@ struct RootView: View {
                     .transition(.opacity)
             case .main:
                 NavigationStack(path: $router.path) {
-                    PlaceholderScreen(title: "Your AI tools, ready to go", actionTitle: "Ask anything…") {
-                        router.push(.chat(chatId: nil, prompt: nil))
-                    }
+                    MainView(subscription: dependencies.subscription)
                     .navigationDestination(for: AppRoute.self) { route in
                         destination(route)
                             .toolbar(.hidden, for: .navigationBar)
