@@ -20,7 +20,7 @@
 - [x] 0.4 iOS 16: `deploymentTarget` → 16.0; ViewModel → `ObservableObject`;
       `Mutex` → свой лок; убрать API iOS 17+ или спрятать за `#available`.
       Сборка под iOS 16.
-- [ ] 0.5 **👤** Секреты: `gen_secrets.py` читает `NEBULA_API_TOKEN` и
+- [x] 0.5 **👤** Секреты: `gen_secrets.py` читает `NEBULA_API_TOKEN` и
       `APPHUD_API_KEY`; пользователь запускает скрипт. Тест формы ключей
       (`eyJ…`/`app_…`, длина), значения → `Bool` до `#expect`.
 

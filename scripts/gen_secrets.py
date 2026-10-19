@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Генерирует AIChat/Data/Secrets/Secrets.generated.swift с обфусцированным ключом.
+"""Генерирует AIChat/Data/Secrets/Secrets.generated.swift с обфусцированными ключами.
 
-Ключ берётся ТОЛЬКО из переменной окружения, чтобы он не попадал ни в чат
+Ключи берутся ТОЛЬКО из переменных окружения, чтобы они не попадали ни в чат
 с агентом, ни в логи, ни в git открытым текстом:
 
-    GROQ_API_KEY=gsk_... python3 scripts/gen_secrets.py
+    NEBULA_API_TOKEN=eyJ... APPHUD_API_KEY=app_... python3 scripts/gen_secrets.py
 
-Схема: ключ XOR со случайной солью той же длины. В файле лежат два массива
-байт; собирается строка только в рантайме. Это защита от grep и сканеров
+- NEBULA_API_TOKEN — Bearer-токен владельца для Dola и PixVerse API;
+- APPHUD_API_KEY — API-ключ проекта Apphud.
+
+Схема: каждый ключ XOR со случайной солью той же длины. В файле лежат массивы
+байт; строка собирается только в рантайме. Это защита от grep и сканеров
 секретов, а не от реверса — настоящая защита требует своего прокси-сервера.
 """
 import os
@@ -15,13 +18,16 @@ import secrets
 import sys
 from pathlib import Path
 
-key = os.environ.get("GROQ_API_KEY", "").strip()
-if not key:
-    sys.exit("Задайте переменную окружения GROQ_API_KEY")
+KEYS = {
+    # имя свойства в Swift: переменная окружения
+    "nebulaAPIToken": "NEBULA_API_TOKEN",
+    "apphudAPIKey": "APPHUD_API_KEY",
+}
 
-raw = key.encode("utf-8")
-salt = secrets.token_bytes(len(raw))
-mixed = bytes(a ^ b for a, b in zip(raw, salt))
+values = {name: os.environ.get(env, "").strip() for name, env in KEYS.items()}
+missing = [KEYS[name] for name, value in values.items() if not value]
+if missing:
+    sys.exit("Задайте переменные окружения: " + ", ".join(missing))
 
 
 def swift_array(data: bytes) -> str:
@@ -31,19 +37,24 @@ def swift_array(data: bytes) -> str:
     return "[\n" + ",\n".join(lines) + "\n    ]"
 
 
-out = f"""// Сгенерировано scripts/gen_secrets.py — не редактировать вручную.
-// Ключ обфусцирован (XOR с солью), открытым текстом в репозитории его нет.
+blocks = []
+for name, value in values.items():
+    raw = value.encode("utf-8")
+    salt = secrets.token_bytes(len(raw))
+    mixed = bytes(a ^ b for a, b in zip(raw, salt))
+    blocks.append(f"""    private static let {name}Salt: [UInt8] = {swift_array(salt)}
 
-enum Secrets {{
-    private static let salt: [UInt8] = {swift_array(salt)}
+    private static let {name}Mixed: [UInt8] = {swift_array(mixed)}
 
-    private static let mixed: [UInt8] = {swift_array(mixed)}
+    static var {name}: String {{
+        String(decoding: zip({name}Mixed, {name}Salt).map {{ $0 ^ $1 }}, as: UTF8.self)
+    }}""")
 
-    static var groqAPIKey: String {{
-        String(decoding: zip(mixed, salt).map {{ $0 ^ $1 }}, as: UTF8.self)
-    }}
-}}
-"""
+out = """// Сгенерировано scripts/gen_secrets.py — не редактировать вручную.
+// Ключи обфусцированы (XOR с солью), открытым текстом в репозитории их нет.
+
+enum Secrets {
+""" + "\n\n".join(blocks) + "\n}\n"
 
 path = Path(__file__).resolve().parent.parent / "AIChat/Data/Secrets/Secrets.generated.swift"
 path.parent.mkdir(parents=True, exist_ok=True)
