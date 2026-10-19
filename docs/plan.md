@@ -36,7 +36,7 @@
       Готово, когда: GET/POST JSON и multipart собираются из `Endpoint`;
       каждый код из таблицы маппинга и `URLError` дают свой `APIError`; тела
       ошибок не попадают в текст. `feat: add HTTP client and API error mapping`
-- [ ] 1.2 Сессия API: `auth/session`, `auth/refresh`, Keychain, повтор на 401;
+- [x] 1.2 Сессия API: `auth/session`, `auth/refresh`, Keychain, повтор на 401;
       отдельно для Dola и PixVerse. Тесты.
       Готово, когда: первый запрос открывает сессию; 401 → refresh → повтор
       ровно один раз; параллельные запросы делят одно обновление токена; токены
