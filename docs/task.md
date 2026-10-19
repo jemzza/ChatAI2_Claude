@@ -107,7 +107,7 @@ JSON — `snake_case`. Фикстуры ответов — `AIChatTests/Fixtures
   `status` (`uploading` → `generating` → `success` | `failed`), `aspect`
   (`16:9`/`9:16`/`1:1`), `quality`, `sourceImagePath` (для «Try again»),
   `videoURL?`, `localVideoPath?`, `isViewed` (бейдж «New»), `failure?`, `createdAt`.
-- `APIError`/`ErrorKind`: `offline`, `unauthorized` (401 после refresh),
+- `APIError`/`ErrorKind`: `offline`, `unauthorized` (401),
   `paymentRequired` (402, нет кредитов), `forbidden` (403), `rateLimited` (429),
   `validation` (422), `server` (5xx), `decoding`, `unknown`.
 
@@ -116,7 +116,7 @@ JSON — `snake_case`. Фикстуры ответов — `AIChatTests/Fixtures
 - `URLError` → `offline`: `notConnectedToInternet`, `networkConnectionLost`,
   `dataNotAllowed`, `timedOut`, `cannotFindHost`, `cannotConnectToHost`; прочие → `unknown`.
 - `CancellationError`, `URLError.cancelled` — не ошибка (уход с экрана/отмена).
-- HTTP: 401 → refresh → повтор один раз → `unauthorized`; 402 → `paymentRequired`;
+- HTTP: 401 → `unauthorized`; 402 → `paymentRequired`;
   403 → `forbidden`; 404 у `status` → `failed` генерации; 422 → `validation`;
   429 → `rateLimited` (+ `retry-after`); 5xx → `server`; прочее → `unknown`.
 - Тексты ошибок не содержат токены, URL с параметрами и сырой ответ сервера.
