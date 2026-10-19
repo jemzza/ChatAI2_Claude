@@ -12,8 +12,7 @@ struct AIChatApp: App {
         WindowGroup {
             switch container.environment {
             case .live:
-                LiveRoot(container: container, navigation: appDelegate.navigation)
-                    .windowAppearance(container.settings.appearance)
+                LiveRoot(container: container)
             case .unitTests:
                 EmptyView()
             }
@@ -21,46 +20,46 @@ struct AIChatApp: App {
     }
 }
 
-/// Запуск: открываем базу (асинхронно), потом показываем экраны и запускаем `ChatService`.
+/// Запуск: открываем базу (асинхронно), потом показываем экраны.
 private struct LiveRoot: View {
     let container: AppContainer
-    let navigation: ChatNavigationRequests
 
     private enum Phase {
         case loading
-        case ready(ChatDependencies, ChatService<ContinuousClock>)
+        case ready(AppDependencies)
         case failed
     }
 
     @State private var phase = Phase.loading
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
             switch phase {
             case .loading:
                 Color.appBackground.ignoresSafeArea()
-            case let .ready(dependencies, service):
-                RootView(dependencies: dependencies, navigation: navigation)
-                    // Сеть и запуск → outbox; живёт столько же, сколько окно.
-                    .task { await service.run() }
-                    .onChange(of: scenePhase) { _, phase in
-                        if phase == .active { service.appDidBecomeActive() }
-                    }
+            case .ready:
+                // Временная заглушка: экраны по Figma появятся в разделах 5–6 плана.
+                Text("AI Chat")
+                    .font(.title2.weight(.semibold))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.appBackground.ignoresSafeArea())
             case .failed:
-                ContentUnavailableView {
-                    Label("Couldn't open chat history", systemImage: "exclamationmark.triangle")
-                } description: {
+                VStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                    Text("Couldn't open chat history")
+                        .font(.headline)
                     Text("Please restart the app.")
+                        .foregroundStyle(.secondary)
                 }
-                .background(.appBackground)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.appBackground.ignoresSafeArea())
             }
         }
         .task {
             guard case .loading = phase else { return }
             do {
-                let screens = try await container.makeScreens()
-                phase = .ready(screens.dependencies, screens.service)
+                phase = .ready(try await container.makeDependencies())
             } catch {
                 phase = .failed
             }

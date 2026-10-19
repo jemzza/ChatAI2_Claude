@@ -43,18 +43,9 @@ targets:
       path: AIChat/Info.plist
       properties:
         CFBundleDisplayName: AI Chat
-        # Свой тип для перетаскивания чата в папку (ChatDragItem).
-        UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.labs.fviu.chat-reference
-            UTTypeDescription: AI Chat conversation
-            UTTypeConformsTo:
-              - public.data
-            UTTypeTagSpecification: {}
         UILaunchScreen: {}
         # Макет только в тёмной теме.
         UIUserInterfaceStyle: Dark
-        NSMicrophoneUsageDescription: Dictation uses the microphone to turn your speech into text. Audio is processed on this device and never saved.
-        NSSpeechRecognitionUsageDescription: Dictation turns your speech into text in the message field. It works on this device when your language supports it; otherwise speech is sent to Apple for recognition.
         NSPhotoLibraryUsageDescription: To upload an image, the app needs access to your photo gallery.
         NSPhotoLibraryAddUsageDescription: The app saves generated videos to your Photos.
         UIApplicationSceneManifest:

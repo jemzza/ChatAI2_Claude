@@ -58,30 +58,18 @@ struct DependencyPlanTests {
         let plan = DependencyPlan(options: .none)
         #expect(plan.storage == .disk)
         #expect(plan.network == .system)
-        #expect(plan.model == .groq)
-        #expect(plan.dictation == .system)
-    }
-
-    @Test func mockDictationSwitchesOnlyDictation() {
-        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockDictation"]))
-                == DependencyPlan(storage: .disk, network: .system, model: .groq, dictation: .scripted))
+        #expect(plan.model == .live)
     }
 
     @Test func eachFlagSwitchesOnlyItsPart() {
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockData"]))
-                == DependencyPlan(storage: .previewData, network: .system, model: .groq))
+                == DependencyPlan(storage: .previewData, network: .system, model: .live))
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockOffline"]))
-                == DependencyPlan(storage: .disk, network: .offline, model: .groq))
+                == DependencyPlan(storage: .disk, network: .offline, model: .live))
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockSlowStream"]))
                 == DependencyPlan(storage: .disk, network: .system, model: .slowStream))
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockError", "429"]))
                 == DependencyPlan(storage: .disk, network: .system, model: .failing(.rateLimited)))
-    }
-
-    @Test func mockOnDeviceModelSwitchesOnlyOnDeviceModel() {
-        #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockOnDeviceModel"]))
-                == DependencyPlan(storage: .disk, network: .system, model: .groq, onDeviceModel: .scripted))
-        #expect(DependencyPlan(options: .none).onDeviceModel == .system)
     }
 
     /// Ошибка важнее медленного стрима: сценарий ошибки проверяем независимо.

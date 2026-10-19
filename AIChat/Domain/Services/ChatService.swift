@@ -29,8 +29,6 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
 
     private let repository: any ChatRepository
     private let provider: any LLMProvider
-    /// Модель на устройстве для «Answer offline»; `nil` — iOS 18 или нет Foundation Models.
-    private let onDeviceProvider: (any OnDeviceLLMProvider)?
     private let connectivity: any ConnectivityMonitoring
     private let backgroundTasks: (any BackgroundTaskScheduling)?
     /// Уведомления о готовом ответе и отправленном outbox.
@@ -48,7 +46,6 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
     init(
         repository: any ChatRepository,
         provider: any LLMProvider,
-        onDeviceProvider: (any OnDeviceLLMProvider)? = nil,
         connectivity: any ConnectivityMonitoring,
         backgroundTasks: (any BackgroundTaskScheduling)? = nil,
         eventHandler: (any ChatEventHandling)? = nil,
@@ -58,7 +55,6 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
     ) {
         self.repository = repository
         self.provider = provider
-        self.onDeviceProvider = onDeviceProvider
         self.connectivity = connectivity
         self.backgroundTasks = backgroundTasks
         self.eventHandler = eventHandler
@@ -131,21 +127,6 @@ final class ChatService<C: Clock>: ChatSession where C.Duration == Duration {
               generations[chatId] == nil
         else { return }
         startGeneration(chatId: chatId, messageId: assistantMessageId, provider: provider)
-    }
-
-    var canAnswerOffline: Bool {
-        !connectivity.isOnline && onDeviceProvider?.isAvailable == true
-    }
-
-    func answerOffline(messageId: UUID, inChat chatId: UUID) async throws {
-        guard canAnswerOffline, let onDeviceProvider, generations[chatId] == nil,
-              let message = try await repository.pendingMessages().first(where: { $0.id == messageId }),
-              // Модель на устройстве фото не видит — отвечать на него вслепую незачем.
-              message.images.isEmpty,
-              // Пока ждали базу, могла появиться сеть (outbox) или начаться другая генерация.
-              canAnswerOffline, generations[chatId] == nil
-        else { return }
-        _ = try await claimAndGenerate(message, provider: onDeviceProvider)
     }
 
     func deleteChat(id: UUID) async throws {

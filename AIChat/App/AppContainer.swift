@@ -4,7 +4,7 @@ import Foundation
 /// Единственный «глобальный» объект — живёт в `AIChatApp` и передаётся дальше через инициализаторы.
 ///
 /// По умолчанию — только реальные реализации. Фейки из `Mocks/` подключаются
-/// исключительно через `LaunchOptions` (DEBUG launch-аргументы, шаг 3.5).
+/// исключительно через `LaunchOptions` (DEBUG launch-аргументы).
 @MainActor
 final class AppContainer {
     enum Environment: Sendable, Equatable {
@@ -17,19 +17,15 @@ final class AppContainer {
 
     let environment: Environment
     let launchOptions: LaunchOptions
-    let groqConfiguration: GroqConfiguration
-    /// Создаются сразу, без базы: тема нужна окну с первого кадра.
     let settings: any SettingsStoring
 
     init(
         environment: Environment,
         launchOptions: LaunchOptions = .none,
-        groqConfiguration: GroqConfiguration = .bundled(),
         settings: any SettingsStoring = UserDefaultsSettingsStore()
     ) {
         self.environment = environment
         self.launchOptions = launchOptions
-        self.groqConfiguration = groqConfiguration
         self.settings = settings
     }
 

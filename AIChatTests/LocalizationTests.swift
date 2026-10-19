@@ -13,7 +13,7 @@ struct LocalizationTests {
         let strings: [String: Entry]
     }
 
-    /// Исходный каталог из репозитория (симулятор и Mac Catalyst читают файлы хоста).
+    /// Исходный каталог из репозитория (симулятор читает файлы хоста).
     private func catalog(_ name: String) throws -> Catalog {
         let url = URL(filePath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
@@ -43,12 +43,6 @@ struct LocalizationTests {
             let value = russian.localizedString(forKey: key, value: nil, table: "InfoPlist")
             #expect(value != key)
         }
-    }
-
-    @Test func formatsKeepTheirPlaceholders() throws {
-        let russian = try russianBundle()
-        let format = russian.localizedString(forKey: "Try again in %lld s", value: nil, table: nil)
-        #expect(String(format: format, 30) == "Повторить можно через 30 с")
     }
 
     @Test func queuedNotificationUsesRussianPlurals() throws {

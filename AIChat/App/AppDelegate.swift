@@ -5,8 +5,6 @@ import UserNotifications
 /// которое запустило приложение с нуля, потеряется.
 @MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    let navigation = ChatNavigationRequests()
-
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -21,16 +19,5 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
         []
-    }
-
-    /// Нажатие на уведомление о готовом ответе — открыть этот чат.
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier,
-              let chatId = UserNotificationScheduler.chatId(from: response.notification.request.content.userInfo)
-        else { return }
-        await MainActor.run { navigation.requestOpenChat(id: chatId) }
     }
 }

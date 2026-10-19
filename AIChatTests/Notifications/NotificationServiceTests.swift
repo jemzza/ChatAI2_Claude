@@ -120,13 +120,4 @@ struct NotificationServiceTests {
         #expect(UserNotificationScheduler.chatId(from: [:]) == nil)
         #expect(UserNotificationScheduler.chatId(from: ["chatId": "not-a-uuid"]) == nil)
     }
-
-    @Test func navigationRequestIsTakenOnce() {
-        let navigation = ChatNavigationRequests()
-        let id = UUID()
-        navigation.requestOpenChat(id: id)
-
-        #expect(navigation.takePendingChatId() == id)
-        #expect(navigation.takePendingChatId() == nil)
-    }
 }
