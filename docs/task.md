@@ -156,8 +156,9 @@ Main: [History] [PRO — только free] [Settings]
 
 - Качество 4K из макета: в API его нет — показывать только 720p/1080p или
   оставить 4K с отправкой 1080p?
-- Ссылки Privacy Policy / Usage Policy / Terms of Use, адрес «Contact us»,
-  ссылка на App Store для «Rate app» и «Share with friends».
+- Ссылки Privacy Policy / Usage Policy, адрес «Contact us», ссылка на App Store
+  для «Rate app» и «Share with friends». Пока: Terms of Use — стандартный EULA
+  Apple, остальные — `nil` в `AppLinks` (кнопки есть, но ничего не открывают).
 
 ## Известные риски
 

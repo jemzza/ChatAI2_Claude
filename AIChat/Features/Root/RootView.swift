@@ -33,7 +33,7 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.35), value: router.stage)
         .fullScreenCover(item: $router.paywall) { _ in
-            PlaceholderScreen(title: "Create anything you want", actionTitle: "Close") {
+            PaywallView(subscription: dependencies.subscription) {
                 router.dismissPaywall()
             }
         }
