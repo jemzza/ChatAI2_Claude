@@ -44,6 +44,12 @@ targets:
       properties:
         CFBundleDisplayName: AI Chat
         UILaunchScreen: {}
+        # Inter (SIL OFL 1.1, AIChat/Resources/Fonts/Inter-OFL.txt) — шрифт макета.
+        UIAppFonts:
+          - Inter-Regular.ttf
+          - Inter-Medium.ttf
+          - Inter-SemiBold.ttf
+          - Inter-Bold.ttf
         # Макет только в тёмной теме.
         UIUserInterfaceStyle: Dark
         NSPhotoLibraryUsageDescription: To upload an image, the app needs access to your photo gallery.
