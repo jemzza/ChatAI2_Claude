@@ -26,7 +26,9 @@ struct ChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ChatHeader(title: "AI Chat", date: model.date, isPinned: model.isPinned) { router.pop() } trailing: {
+            AvatarHeader(icon: "IconSparkles", title: "AI Chat",
+                         subtitle: model.date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()),
+                         isPinned: model.isPinned) { router.pop() } trailing: {
                 if model.hasMenu {
                     chatMenu
                 } else {
@@ -183,53 +185,6 @@ struct ChatView: View {
         } else {
             proxy.scrollTo(last.id, anchor: .bottom)
         }
-    }
-}
-
-/// Шапка чата: назад, аватар, «AI Chat» + дата (+ значок закрепления), справа — действия.
-struct ChatHeader<Trailing: View>: View {
-    let title: LocalizedStringKey
-    let date: Date
-    let isPinned: Bool
-    let onBack: () -> Void
-    @ViewBuilder let trailing: () -> Trailing
-
-    var body: some View {
-        HStack(spacing: 0) {
-            BackButton(action: onBack)
-                .frame(width: 24)
-                .padding(.trailing, 24)
-            HStack(spacing: 12) {
-                Image("IconSparkles")
-                    .frame(width: 24, height: 24)
-                    .frame(width: 32, height: 32)
-                    .background(AppGradient.primary, in: Circle())
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(title)
-                            .font(AppFont.navigationTitle)
-                        if isPinned {
-                            Image(systemName: "pin.fill")
-                                .font(.system(size: 12))
-                                .rotationEffect(.degrees(45))
-                                .opacity(0.3)
-                                .accessibilityLabel(Text("Pinned"))
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                    }
-                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
-                        .font(AppFont.subheadline)
-                        .opacity(0.3)
-                }
-                .foregroundStyle(Color.appAccent)
-            }
-            Spacer()
-            trailing()
-        }
-        .padding(16)
-        .background(Color.appSurface.opacity(0.4).ignoresSafeArea(edges: .top))
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isPinned)
     }
 }
 

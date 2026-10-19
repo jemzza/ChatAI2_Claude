@@ -55,11 +55,22 @@ final class FakeVideoAPI: VideoAPI {
     static let sampleVideoURL = URL(string: "https://media.pixverse.ai/sample.mp4")!
 
     static let sampleTemplates: [VideoTemplate] = [
-        VideoTemplate(id: 1, name: "Clay Fool", category: "📈 Trending", previewURL: nil,
+        VideoTemplate(id: 1, name: "Clay Fool", category: "📈 Trending", previewURL: sample(1),
                       qualities: [.p360, .p540, .p720, .p1080], duration: 5),
-        VideoTemplate(id: 2, name: "Dense Snowflakes", category: "💃 Dance", previewURL: nil,
+        VideoTemplate(id: 2, name: "Dense Snowflakes", category: "💃 Dance", previewURL: sample(2),
                       qualities: [.p720, .p1080], duration: 5),
-        VideoTemplate(id: 3, name: "Warm Light", category: "💛 Warm", previewURL: nil, qualities: [], duration: nil),
+        VideoTemplate(id: 3, name: "Warm Light", category: "💛 Warm", previewURL: sample(3), qualities: [],
+                      duration: nil),
+        VideoTemplate(id: 4, name: "Disco Night", category: "💃 Dance", previewURL: sample(4), qualities: [],
+                      duration: 5),
+        VideoTemplate(id: 5, name: "Golden Hour", category: "📈 Trending", previewURL: sample(5), qualities: [],
+                      duration: 5),
+        VideoTemplate(id: 6, name: "Snow Globe", category: "❄️ Winter Vibe", previewURL: sample(6), qualities: [],
+                      duration: 5),
     ]
+
+    private static func sample(_ id: Int) -> URL? {
+        URL(string: "https://media.example.test/templates/\(id).mp4")
+    }
 }
 #endif

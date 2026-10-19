@@ -598,6 +598,16 @@
         }
       }
     },
+    "Popular" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Популярное"
+          }
+        }
+      }
+    },
     "Privacy Policy" : {
       "localizations" : {
         "ru" : {

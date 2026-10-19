@@ -5,8 +5,8 @@ enum AppRoute: Hashable {
     /// Чат: `chatId == nil` — новый; `prompt` — текст, с которым открыли «Ask anything…».
     case chat(chatId: UUID?, prompt: String?)
     case templates
-    /// Превью шаблона — листание начинается с `templateId`.
-    case templatePreview(templateId: Int64)
+    /// Превью шаблона: листание по шаблонам категории (`nil` — все), начиная с `templateId`.
+    case templatePreview(templateId: Int64, category: String?)
     /// Генерация и её результат — один экран, состояние берётся из базы.
     case generation(id: UUID)
     case history(HistoryTab)

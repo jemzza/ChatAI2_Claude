@@ -44,7 +44,7 @@ struct RootView: View {
         case let .chat(chatId, prompt):
             ChatView(chatId: chatId, prompt: prompt, dependencies: dependencies)
         case .templates:
-            PlaceholderScreen(title: "AI Video", showsBack: true)
+            TemplatesView(dependencies: dependencies)
         case .templatePreview, .generation:
             PlaceholderScreen(title: "Result", showsBack: true)
         case .history:

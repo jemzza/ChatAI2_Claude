@@ -68,6 +68,7 @@ struct AppDependencies {
     let videoAPI: any VideoAPI
     let media: any MediaStoring
     let video: VideoGenerationService
+    let thumbnails: any VideoThumbnailing
 }
 
 extension AppContainer {
@@ -94,8 +95,7 @@ extension AppContainer {
             eventHandler: notifications
         )
         let videoRepository = GRDBVideoRepository(database: database)
-        let videoAPI = PixverseClient(api: nebulaAPI(service: "pixverse", subscription: subscription),
-                                      catalogCacheURL: Self.templatesCacheURL)
+        let videoAPI = makeVideoAPI(plan.storage, subscription: subscription)
         let media = try FileMediaStore.standard()
         let video = VideoGenerationService(
             repository: videoRepository,
@@ -107,7 +107,25 @@ extension AppContainer {
         )
         return AppDependencies(repository: repository, connectivity: connectivity,
                                subscription: subscription, chat: chat, videoRepository: videoRepository,
-                               videoAPI: videoAPI, media: media, video: video)
+                               videoAPI: videoAPI, media: media, video: video,
+                               thumbnails: makeThumbnails(plan.storage))
+    }
+
+    /// `-mockData` — каталог и генерация видео из фейка: экраны видео работают без сети.
+    private func makeVideoAPI(_ storage: DependencyPlan.Storage,
+                              subscription: any SubscriptionService) -> any VideoAPI {
+        #if DEBUG
+        if storage == .previewData { return FakeVideoAPI() }
+        #endif
+        return PixverseClient(api: nebulaAPI(service: "pixverse", subscription: subscription),
+                              catalogCacheURL: Self.templatesCacheURL)
+    }
+
+    private func makeThumbnails(_ storage: DependencyPlan.Storage) -> any VideoThumbnailing {
+        #if DEBUG
+        if storage == .previewData { return FakeVideoThumbnails() }
+        #endif
+        return VideoThumbnailService.standard()
     }
 
     /// Последний каталог шаблонов — для работы без сети.

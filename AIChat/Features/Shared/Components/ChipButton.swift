@@ -20,11 +20,12 @@ struct ChipButton: View {
         Button(action: action) {
             // Текст чипа — данные (категория из API) или уже локализованная подсказка.
             Text(verbatimTitle)
-                .font(style == .suggestion ? AppFont.subheadline : AppFont.caption)
-                .foregroundStyle(Color.appAccent.opacity(style == .suggestion ? 0.9 : 1))
+                .font(style == .outline ? AppFont.caption : AppFont.subheadline)
+                .foregroundStyle(Color.appAccent.opacity(textOpacity))
                 .lineLimit(1)
-                .padding(.horizontal, style == .suggestion ? 14 : 12)
+                .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, style == .suggestion ? 10 : 8)
+                .frame(minWidth: style == .filled ? 76 : nil)
                 .background(background)
                 .overlay(border)
                 .contentShape(Capsule())
@@ -35,12 +36,30 @@ struct ChipButton: View {
 
     private var verbatimTitle: String { title }
 
+    private var textOpacity: Double {
+        switch style {
+        case .outline: 1
+        case .suggestion: 0.9
+        case .filled: isSelected ? 1 : 0.5
+        }
+    }
+
+    private var horizontalPadding: CGFloat {
+        switch style {
+        case .outline: 12
+        case .suggestion: 14
+        case .filled: 16
+        }
+    }
+
     @ViewBuilder
     private var background: some View {
         if style == .filled, isSelected {
             Capsule().fill(AppGradient.primary)
         } else if style == .suggestion {
             Capsule().fill(Color.appSurface.opacity(0.8))
+        } else if style == .filled {
+            Capsule().fill(Color.appSurface.opacity(0.6))
         } else {
             Capsule().fill(Color.appFillTertiary)
         }
@@ -52,7 +71,7 @@ struct ChipButton: View {
             Capsule().strokeBorder(AppGradient.primary, lineWidth: 1)
         } else if style == .suggestion {
             Capsule().strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-        } else if !(style == .filled && isSelected) {
+        } else if style == .outline {
             Capsule().strokeBorder(Color.appSeparator, lineWidth: 1)
         }
     }

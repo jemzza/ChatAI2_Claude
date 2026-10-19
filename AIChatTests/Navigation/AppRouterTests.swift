@@ -49,7 +49,7 @@ struct AppRouterTests {
         let router = AppRouter(settings: InMemorySettingsStore(hasCompletedOnboarding: true))
         let id = UUID()
         router.push(.templates)
-        router.push(.templatePreview(templateId: 7))
+        router.push(.templatePreview(templateId: 7, category: nil))
         router.replaceTop(with: .generation(id: id))
         #expect(router.path == [.templates, .generation(id: id)])
         router.pop()
