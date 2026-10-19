@@ -48,12 +48,13 @@ Chat** и **AI Video Generator** — плюс онбординг, пейвол (
 | Архитектура | MVVM + offline-first: GRDB — единственный источник правды для чатов и видео; экраны читают базу через `ValueObservation`; сеть пишет в базу через сервисы | Сохраняем подход стартового проекта: история переживает перезапуск и работу без сети |
 | Сервисы | `ChatService` и `VideoGenerationService` живут в `AppContainer` и владеют сетевыми задачами | Уход с экрана не отменяет генерацию ответа или видео (по макету видео генерируется в фоне и появляется в History) |
 | Чат: ответ | Dola отвечает целиком (`assistant_message`), стриминга нет. Пока ждём — анимация «печатает» из макета; готовый ответ появляется плавно | API без стриминга; «Стоп» по макету нет — во время генерации кнопка Send неактивна |
-| Чат: id | `chat_id` генерирует клиент (UUID строкой); история — локальная, с сервера не синхронизируем | Сервер хранит чаты на пару user+app; источник правды — локальная база |
-| Авторизация API | `POST /api/v3/auth/session` (Bearer владельца, `user_id` = Apphud User ID, `app_id` = `com.test.test`) → access + refresh. Токены — в Keychain. На 401 — один `refresh`, при неудаче — новая сессия, затем ошибка | Короткий access-токен, владельческий токен не уходит в каждый запрос. У Dola и PixVerse сессии раздельные (разные сервисы) |
+| Чат: id | `chat_id` генерирует клиент (UUID строкой, сервер принимает); история — локальная, с сервера не синхронизируем | Сервер хранит чаты на пару user+app; источник правды — локальная база |
+| Версия API и авторизация | **v1** у обоих сервисов: `Authorization: Bearer <токен владельца>` + query `user_id` (Apphud User ID) и `app_id=com.test.test` в каждом запросе | Проверено реальными запросами (шаг 1.3): у Dola маршруты `/api/v3/*` на сервере отдают 404, v1 работает; набор данных в ТЗ (Bearer + user_id + application_id) — ровно под v1. Клиентские сессии v3 (шаг 1.2) не используем, код удалён |
 | Сетевой слой | Свой `HTTPClient` на `URLSession` + `async/await`, `Endpoint` (метод, путь, query, тело JSON/multipart), декодирование `Decodable`, маппинг ошибок в `APIError` | Без Alamofire: задач мало, лишняя зависимость не нужна |
+| Шаблоны видео | `GET /api/v1/get_templates/com.test.test` → `templates` (879 шт.). Категории — поле `category` (с эмодзи, «✨ Other» — 742 шт.); чипы категорий строим из данных, «Popular» из макета — первая категория по порядку ответа/«📈 Trending». Превью (`preview_small`/`preview_large`) — **mp4**: в сетке — первый кадр (`AVAssetImageGenerator`, кэш), на экране шаблона — беззвучное видео по кругу. В запрос генерации идёт `template_id` (Int64), не `id` | Реальный ответ API |
 | Видео: формат | В API `template2video` нет параметра соотношения сторон. Выбранный формат (16:9 / 9:16 / 1:1) — центр-кроп фото перед отправкой; результат показывается в контейнере этого формата | Иначе выбор формата из макета ничего бы не менял |
-| Видео: качество | В API — `360p/540p/720p/1080p`. В макете 720p / 1080p / 4K — **открытый вопрос** к заказчику: 4K в API нет | См. «Открытые вопросы» |
-| Видео: статус | Опрос `GET /api/v3/status?id=` с интервалом 3 с → 5 с → 10 с; при запуске приложения опрос возобновляется для всех `generating` | Пуш-уведомлений от сервера нет |
+| Видео: качество | В API — `360p/540p/720p/1080p` (у шаблона — свой список `qualities`). В макете 720p / 1080p / 4K — **открытый вопрос** к заказчику: 4K в API нет | См. «Открытые вопросы» |
+| Видео: статус | Опрос `GET /api/v1/status?id=` с интервалом 3 с → 5 с → 10 с; при запуске приложения опрос возобновляется для всех `generating` | Пуш-уведомлений от сервера нет |
 | Видео: файл | Готовое видео скачивается в `Caches/Videos/` и проигрывается локально (`AVPlayer`, по кругу); «Download» — в Фото (`PHPhotoLibrary`, add-only); «Share» — системный share sheet с файлом | Быстрый повторный показ, работа без сети; «Clear cache» в настройках чистит эту папку |
 | Подписка | Apphud SDK (SPM, обоснование ниже) за протоколом `SubscriptionService` (Domain): `isPremium` (`AsyncStream`/`@Published`), `paywallProducts()`, `purchase`, `restore`, `userID` | ViewModel не знает про Apphud; фейк для превью и тестов. Статус обновляется делегатом Apphud — доступ открывается сразу после покупки |
 | Премиум-контент | Без подписки: отправка в чате и «Create» видео открывают пейвол (введённый промпт/выбранное фото сохраняются). Просмотр истории, шаблонов и настроек — доступен | Заметки к макетам «Main Page — Free User» и «AI Chat — Prompt Entered» |
@@ -73,6 +74,23 @@ Chat** и **AI Video Generator** — плюс онбординг, пейвол (
 - **GRDB 7** (`exactVersion`) — база, `ValueObservation`.
 - **ApphudSDK** (`exactVersion`) — требование ТЗ: покупки, пейвол, статус подписки.
 
+## Контракты API (проверено реальными запросами 2026-10-19)
+
+Базовые URL: `https://nebulaapps.site/dola`, `https://nebulaapps.site/pixverse`.
+Во всех запросах: `Authorization: Bearer <токен>`, query `user_id`, `app_id`.
+JSON — `snake_case`. Фикстуры ответов — `AIChatTests/Fixtures/`.
+
+| Запрос | Ответ |
+|---|---|
+| `POST /dola/chats/{chat_id}/messages` JSON `{"message": …}` | 200 `{chat_id, assistant_message, images: []}`; песочница всегда отвечает одним текстом. 402 — нет кредитов |
+| `GET /dola/chats` | 200 `[{chat_id, title?, persona_id?, updated_at, last_message_preview?}]` (`updated_at` без зоны: `2026-10-19T14:53:40`) — не используем |
+| `GET /dola/chats/{chat_id}/messages` | 200 `[]` в песочнице — не используем |
+| без Bearer | 401 `{"detail": "Missing authorization header"}` |
+| `GET /pixverse/api/v1/get_templates/{app_id}` | 200 `{templates: [{id, template_id, name, category, duration, preview_small, preview_large (mp4), prompt, qualities, is_active (0/1)}], template_image, styles, …}` |
+| `POST /pixverse/api/v1/template2video` multipart `template_id`, `image` (JPEG), `quality`, `duration?` | 201 `{video_id, detail}` |
+| `GET /pixverse/api/v1/status?id=` | 200 `{status: generating/success/error, video_url?}`; неизвестный id — 404 `{"detail": "Generation not found"}` |
+| `GET /pixverse/api/v1/balance` | 200 `{balance}` — не используем |
+
 ## Модель данных (Domain/Models)
 
 - `Chat`: `id`, `title`, `createdAt`, `updatedAt`, `folderId?`, `pinnedAt?`.
@@ -83,8 +101,8 @@ Chat** и **AI Video Generator** — плюс онбординг, пейвол (
     закрыли во время запроса). Повтор («Regenerate» последнего ответа,
     «Retry» у ошибки) — атомарный `claimRetry`.
 - `Folder`: как в стартовом проекте.
-- `VideoTemplate`: `id`, `title`, `category`, `previewURL`, `previewVideoURL?`
-  (точная форма — по ответу `GET /api/v3/templates`).
+- `VideoTemplate`: `id` (= `template_id`, Int64), `name`, `category`,
+  `previewURL` (mp4), `qualities`, `duration` (форма — «Контракты API»).
 - `VideoGeneration`: `id` (UUID), `templateId`, `templateTitle`, `serverId?`,
   `status` (`uploading` → `generating` → `success` | `failed`), `aspect`
   (`16:9`/`9:16`/`1:1`), `quality`, `sourceImagePath` (для «Try again»),
@@ -142,8 +160,10 @@ Main: [History] [PRO — только free] [Settings]
 - Рантайм симулятора iOS 16 нужно скачать отдельно (Xcode 26 его не содержит).
 - Покупки Apphud в симуляторе — через StoreKit Configuration / sandbox; без
   продуктов в App Store Connect цены могут не прийти — нужен понятный fallback.
-- Ответ `GET /api/v3/templates` описан как произвольный объект — модель
-  уточняем по реальному ответу (шаг 1.3 плана).
+- Симулятор на машине разработки не резолвит DNS (`-1003`), хотя с Mac сервер
+  доступен (VPN?). Реальные запросы проверены с Mac консольной пробой; запуск
+  приложения в симуляторе против реального API — проверить в 7.3.
+- Баланс PixVerse = 0, но песочница генерирует (сразу `success`).
 
 ## Вне рамок
 

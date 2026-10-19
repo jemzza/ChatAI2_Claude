@@ -36,17 +36,22 @@
       Готово, когда: GET/POST JSON и multipart собираются из `Endpoint`;
       каждый код из таблицы маппинга и `URLError` дают свой `APIError`; тела
       ошибок не попадают в текст. `feat: add HTTP client and API error mapping`
-- [x] 1.2 Сессия API: `auth/session`, `auth/refresh`, Keychain, повтор на 401;
+- [x] 1.2 ~~Сессия API~~ (заменено после 1.3 — см. журнал). Сессия API: `auth/session`, `auth/refresh`, Keychain, повтор на 401;
       отдельно для Dola и PixVerse. Тесты.
       Готово, когда: первый запрос открывает сессию; 401 → refresh → повтор
       ровно один раз; параллельные запросы делят одно обновление токена; токены
       только в Keychain. `feat: add API client sessions with token refresh`
-- [ ] 1.3 Проверка реальными запросами (`health`, `auth/session`,
+- [x] 1.3 Проверка реальными запросами (`health`, `auth/session`,
       `templates`, `chats/{id}/messages`): базовые URL и реальная форма
       ответа шаблонов — в `docs/task.md`. Токен не печатать.
       Готово, когда: каждый запрос реально выполнен (код ответа записан),
       формат шаблонов и сообщений в `docs/task.md`, модели декодируют реальные
       ответы (фикстуры без токенов — в тестах). `docs: record real API contracts`
+
+- [ ] 1.4 Перейти на v1: убрать клиентские сессии и Keychain, `NebulaAPI` —
+      Bearer владельца + `user_id`/`app_id` в каждом запросе.
+      Готово, когда: тесты — заголовок и query у каждого запроса, `user_id`
+      берётся из провайдера на момент запроса. `refactor: switch to v1 API authorization`
 
 ## 2. Подписка (Apphud)
 
@@ -175,3 +180,8 @@ _Сюда записываем, что пошло не так и что реши
 - 1.1: `ErrorKind` расширен (`paymentRequired`, `notFound`, `validation`,
   `decoding`), `unsupportedLanguage` убран. Новая `APIError` пока живёт рядом
   с `LLMError` — `LLMError` уйдёт вместе с `LLMProvider` в 3.2.
+- 1.3: реальные запросы показали, что у Dola v3 (клиентские сессии) не
+  развёрнут — 404; v1 с Bearer владельца и `user_id`/`app_id` в query работает
+  у обоих сервисов и совпадает с данными ТЗ. Код 1.2 (сессии, Keychain)
+  удаляем отдельным шагом 1.4. Симулятор здесь не резолвит DNS — пробы
+  выполнены консольной программой на Mac (`LiveAPIProbeTests` — тот же код).

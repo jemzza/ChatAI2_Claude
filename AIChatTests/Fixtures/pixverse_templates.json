@@ -1,0 +1,119 @@
+{
+  "application_id" : "com.test.test",
+  "application_number" : 9999,
+  "id" : 24,
+  "styles" : [
+    {
+      "id" : 8,
+      "is_active" : 1,
+      "name" : "Felted Art",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/styles/30/1a0cb2fc8c604bafa6c64f80f927acc7.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/styles/30/1a0cb2fc8c604bafa6c64f80f927acc7.mp4",
+      "prompt" : "Textured felt style with soft layered animation and warm colors, featuring simplified characters and environments made of stitched wool materials, with emphasis on bright eyes",
+      "qualities" : [
+
+      ],
+      "template_id" : 322672481023040,
+      "template_model" : null
+    }
+  ],
+  "subscription_enabled" : 0,
+  "template_image" : [
+    {
+      "category" : "✨ Beauty",
+      "fixed_cost" : 20,
+      "id" : 123,
+      "is_active" : 1,
+      "name" : "LiDAR Drip",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/image_templates/411039881880320/fbd5463568c5404cbbfde7db1c1e85dd.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/image_templates/411039881880320/fbd5463568c5404cbbfde7db1c1e85dd.mp4",
+      "prompt" : "Step into the darkness and reshape your visual world with Point Cloud Rendering",
+      "qualities" : [
+        "360p",
+        "540p",
+        "720p",
+        "1080p"
+      ],
+      "template_id" : 411039881880320,
+      "template_model" : "qwen-image"
+    }
+  ],
+  "templates" : [
+    {
+      "category" : "📈 Trending",
+      "duration" : 5,
+      "id" : 685,
+      "is_active" : 1,
+      "is_custom" : true,
+      "name" : "Dense Snowflakes",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/820/ee8bfe79e8e845b1b1839fa536f014ce.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/820/ee8bfe79e8e845b1b1839fa536f014ce.mp4",
+      "prompt" : "Delicate snowflakes gracefully fall from the sky.",
+      "qualities" : [
+        "360p",
+        "540p",
+        "720p",
+        "1080p"
+      ],
+      "template_id" : 374743997109542,
+      "template_model" : "v5"
+    },
+    {
+      "category" : "🎬 Film & TV Inspo",
+      "duration" : 8,
+      "id" : 317,
+      "is_active" : 1,
+      "is_custom" : false,
+      "name" : "Rocky Balboa",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/452/cf26c94fd182444d8d1f6e142e4a621f.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/452/cf26c94fd182444d8d1f6e142e4a621f.mp4",
+      "prompt" : "Place yourself into a Rocky Balboa movie poster.",
+      "qualities" : [
+        "360p",
+        "540p",
+        "720p",
+        "1080p"
+      ],
+      "template_id" : 383217104128057,
+      "template_model" : "v5"
+    },
+    {
+      "category" : "❄️ Winter Vibe",
+      "duration" : 5,
+      "id" : 165,
+      "is_active" : 1,
+      "is_custom" : false,
+      "name" : "Giant Snowball",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/300/e645f7dd1a4b40509466fc0635ccf0dc.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/300/e645f7dd1a4b40509466fc0635ccf0dc.mp4",
+      "prompt" : "Get struck by the soft and enormous snowball.",
+      "qualities" : [
+        "360p",
+        "540p",
+        "720p",
+        "1080p"
+      ],
+      "template_id" : 373561563953124,
+      "template_model" : "v5"
+    },
+    {
+      "category" : "🌸 Spring Splendor",
+      "duration" : 8,
+      "id" : 333,
+      "is_active" : 1,
+      "is_custom" : true,
+      "name" : "Step Bloom",
+      "preview_large" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/468/c7362a6e6f9f4872b16109916816845c.mp4",
+      "preview_small" : "https://media.nebulaapps.site/e661fd66feb543998a07ebab0303dfb9:descript/protected/pixverse/catalog/templates/468/c7362a6e6f9f4872b16109916816845c.mp4",
+      "prompt" : "A one-step spring bloom spreads from the ground—full-bloom background, cinematic single shot.",
+      "qualities" : [
+        "360p",
+        "540p",
+        "720p",
+        "1080p"
+      ],
+      "template_id" : 392305935059414,
+      "template_model" : "v5.6"
+    }
+  ]
+}
