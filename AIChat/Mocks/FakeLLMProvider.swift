@@ -1,6 +1,5 @@
 #if DEBUG
 import Foundation
-import Synchronization
 
 /// LLM по сценарию: отдаёт текст по словам с паузой, падает или «висит» до отмены.
 final class FakeLLMProvider: LLMProvider {
@@ -20,10 +19,10 @@ final class FakeLLMProvider: LLMProvider {
         var requests: [[LLMMessage]] = []
     }
 
-    private let state: Mutex<State>
+    private let state: Locked<State>
 
     init(script: Script = .reply("Hello! This is a **mock** reply.")) {
-        state = Mutex(State(script: script))
+        state = Locked(State(script: script))
     }
 
     /// Все запросы, которые пришли в провайдер, — для проверок в тестах.

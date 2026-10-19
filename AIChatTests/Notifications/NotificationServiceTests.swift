@@ -74,7 +74,7 @@ struct NotificationServiceTests {
 
     @Test func replyInDeletedChatIsNotNotified() async throws {
         let harness = makeHarness()
-        try await harness.repository.deleteChat(id: harness.chat.id)
+        harness.repository.deleteChat(id: harness.chat.id)
 
         await harness.service.replyDidFinish(chatId: harness.chat.id, text: "Done")
 

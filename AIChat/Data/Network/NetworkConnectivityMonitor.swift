@@ -1,6 +1,5 @@
 import Foundation
 import Network
-import Synchronization
 
 /// Статус сети на `NWPathMonitor`. Один монитор на приложение; подписчиков может быть
 /// несколько — каждый получает текущее значение сразу, дальше только изменения.
@@ -15,7 +14,7 @@ final class NetworkConnectivityMonitor: ConnectivityMonitoring {
     }
 
     private let monitor = NWPathMonitor()
-    private let state = Mutex(State())
+    private let state = Locked(State())
 
     init() {
         monitor.pathUpdateHandler = { [weak self] path in

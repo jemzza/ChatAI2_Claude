@@ -3,7 +3,7 @@ name: AIChat
 options:
   bundleIdPrefix: com.labs.fviu
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "16.0"
   createIntermediateGroups: true
   developmentLanguage: en
 

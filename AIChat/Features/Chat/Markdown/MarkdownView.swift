@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Ответ ассистента в блочном markdown: заголовки, списки, цитаты, разделители
-/// и карточки кода. Шрифт (serif) задаёт родитель через `textStyle(.assistantMessage)`.
+/// и карточки кода. Шрифт задаёт родитель через `textStyle(.assistantMessage)`.
 struct MarkdownView: View {
     let text: String
     var copyCode: (String) -> Void = { _ in }
@@ -144,23 +144,22 @@ private struct CodeCard: View {
                 Button {
                     copy(code)
                     isCopied = true
+                    // `.sensoryFeedback` — только с iOS 17.
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                 } label: {
                     Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                         .font(.caption.weight(.medium))
-                        .contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .frame(minHeight: 32)
-                .contentShape(.rect)
-                .sensoryFeedback(.success, trigger: isCopied) { _, copied in copied }
+                .contentShape(Rectangle())
                 .task(id: isCopied) {
                     guard isCopied else { return }
                     try? await Task.sleep(for: .seconds(1.5))
                     isCopied = false
                 }
             }
-            .fontDesign(.default)
             .padding(.horizontal, 12)
             .padding(.top, 4)
 
@@ -170,7 +169,6 @@ private struct CodeCard: View {
                 // Код — содержимое ответа; markdown внутри не разбираем.
                 Text(code)
                     .font(.callout.monospaced())
-                    .fontDesign(.monospaced)
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: true, vertical: true)

@@ -1,17 +1,14 @@
 #if DEBUG
+import Combine
 import Foundation
-import Observation
 
 /// Настройки в памяти — для превью и тестов.
 @MainActor
-@Observable
-final class InMemorySettingsStore: SettingsStoring {
-    var appearance: AppearancePreference
-    var notifyOnReply: Bool
-    var notifyOnQueuedSent: Bool
+final class InMemorySettingsStore: SettingsStoring, ObservableObject {
+    @Published var notifyOnReply: Bool
+    @Published var notifyOnQueuedSent: Bool
 
-    init(appearance: AppearancePreference = .system, notifyOnReply: Bool = false, notifyOnQueuedSent: Bool = false) {
-        self.appearance = appearance
+    init(notifyOnReply: Bool = false, notifyOnQueuedSent: Bool = false) {
         self.notifyOnReply = notifyOnReply
         self.notifyOnQueuedSent = notifyOnQueuedSent
     }

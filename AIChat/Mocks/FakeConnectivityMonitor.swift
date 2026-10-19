@@ -1,6 +1,5 @@
 #if DEBUG
 import Foundation
-import Synchronization
 
 /// Сеть, которой управляют вручную: `setOnline(_:)`.
 final class FakeConnectivityMonitor: ConnectivityMonitoring {
@@ -9,10 +8,10 @@ final class FakeConnectivityMonitor: ConnectivityMonitoring {
         var observers: [UUID: AsyncStream<Bool>.Continuation] = [:]
     }
 
-    private let state: Mutex<State>
+    private let state: Locked<State>
 
     init(isOnline: Bool = true) {
-        state = Mutex(State(isOnline: isOnline))
+        state = Locked(State(isOnline: isOnline))
     }
 
     var isOnline: Bool { state.withLock(\.isOnline) }

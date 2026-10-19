@@ -17,7 +17,7 @@
 - [x] 0.3 Убрать то, что не входит в ТЗ: Groq, Foundation Models, голос,
       старые настройки/сайдбар, их тесты и строки каталога. Временный корневой
       экран-заглушка. Сборка и тесты зелёные.
-- [ ] 0.4 iOS 16: `deploymentTarget` → 16.0; ViewModel → `ObservableObject`;
+- [x] 0.4 iOS 16: `deploymentTarget` → 16.0; ViewModel → `ObservableObject`;
       `Mutex` → свой лок; убрать API iOS 17+ или спрятать за `#available`.
       Сборка под iOS 16.
 - [ ] 0.5 **👤** Секреты: `gen_secrets.py` читает `NEBULA_API_TOKEN` и
@@ -96,7 +96,8 @@
       `-mockPremium`/`-mockFree`, `-skipOnboarding`; UI-тесты ключевых потоков.
 - [ ] 7.2 Анимации и переходы, haptics, память (плеер, даунсемплинг
       картинок), Instruments на утечки.
-- [ ] 7.3 Прогон на iOS 16 и iOS 26: сценарии из README, ошибки через
+- [ ] 7.3 **👤** Скачать рантайм симулятора iOS 16 (Xcode → Settings →
+      Components). Прогон на iOS 16 и iOS 26: сценарии из README, ошибки через
       launch-аргументы, покупка/restore в sandbox.
 - [ ] 7.4 README, честный раздел «Не сделано», `git grep` на ключи.
 
@@ -115,3 +116,9 @@ _Сюда записываем, что пошло не так и что реши
   без «Answer offline», `NotificationService`, Markdown-парсер. Убраны
   перетаскивание чатов (свой `UTType`) и строки микрофона/распознавания.
   `DependencyPlan.Model.groq` → `.live`; реальный провайдер — в 3.2.
+- 0.4: `Mutex` заменён своим `Locked` (`Domain/Support`, `NSLock`, тот же API).
+  `@Observable` был только у хранилища настроек — оно стало `ObservableObject`;
+  тема (`appearance`, `AppearancePreference`) убрана — приложение только тёмное.
+  `Theme` временно упрощён (без serif и цветов через `ColorResource`, который
+  есть только с iOS 17) до шага 5.1. Рантайма iOS 16 на машине нет — сборка
+  проверена с целью 16.0, тесты — на iOS 26; прогон на iOS 16 — в 7.3.

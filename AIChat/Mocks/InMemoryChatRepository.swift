@@ -1,6 +1,5 @@
 #if DEBUG
 import Foundation
-import Synchronization
 
 /// Репозиторий в памяти с тем же контрактом, что и GRDB-реализация
 /// (проверяется общими контрактными тестами). Для превью, DEBUG-хука `-mockData` и тестов.
@@ -80,7 +79,7 @@ final class InMemoryChatRepository: ChatRepository {
         }
     }
 
-    private let state = Mutex(State())
+    private let state = Locked(State())
 
     init(folders: [Folder] = [], chats: [Chat] = [], messages: [Message] = []) {
         state.withLock { state in

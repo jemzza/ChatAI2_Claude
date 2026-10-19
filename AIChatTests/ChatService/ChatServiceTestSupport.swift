@@ -1,5 +1,4 @@
 import Foundation
-import Synchronization
 @testable import AIChat
 
 /// Часы, которые двигает тест. Спать не умеют — `ChatService` их только читает.
@@ -11,7 +10,7 @@ final class ManualClock: Clock, Sendable {
         static func < (lhs: Instant, rhs: Instant) -> Bool { lhs.offset < rhs.offset }
     }
 
-    private let current = Mutex(Instant(offset: .zero))
+    private let current = Locked(Instant(offset: .zero))
 
     var now: Instant { current.withLock { $0 } }
     var minimumResolution: Duration { .zero }
@@ -33,7 +32,7 @@ struct ClockAdvancingProvider: LLMProvider {
 
     /// Токен — только когда потребитель его попросил: часы двигаются в такт чтению.
     func streamReply(to messages: [LLMMessage]) -> AsyncThrowingStream<String, Error> {
-        let remaining = Mutex(tokens[...])
+        let remaining = Locked(tokens[...])
         let clock = clock
         let step = step
         return AsyncThrowingStream {
@@ -47,7 +46,7 @@ struct ClockAdvancingProvider: LLMProvider {
 /// Репозиторий-обёртка: всё передаёт дальше и запоминает вызовы `updateMessage`.
 final class RecordingRepository: ChatRepository {
     let base: any ChatRepository
-    private let updates = Mutex<[MessageStatus]>([])
+    private let updates = Locked<[MessageStatus]>([])
 
     init(base: any ChatRepository) {
         self.base = base
