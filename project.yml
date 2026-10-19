@@ -1,7 +1,7 @@
 name: AIChat
 
 options:
-  bundleIdPrefix: com.example.aichat
+  bundleIdPrefix: com.labs.fviu
   deploymentTarget:
     iOS: "18.0"
   createIntermediateGroups: true
@@ -11,7 +11,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    MARKETING_VERSION: "1.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
@@ -23,6 +23,10 @@ packages:
   GRDB:
     url: https://github.com/groue/GRDB.swift
     exactVersion: "7.11.1"
+  # Требование ТЗ: покупки, пейвол `main`, статус подписки (см. docs/task.md).
+  ApphudSDK:
+    url: https://github.com/apphud/ApphudSDK
+    exactVersion: "4.6.1"
 
 targets:
   AIChat:
@@ -34,37 +38,34 @@ targets:
           - "**/.gitkeep"
     dependencies:
       - package: GRDB
+      - package: ApphudSDK
     info:
       path: AIChat/Info.plist
       properties:
         CFBundleDisplayName: AI Chat
         # Свой тип для перетаскивания чата в папку (ChatDragItem).
         UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.example.aichat.chat-reference
+          - UTTypeIdentifier: com.labs.fviu.chat-reference
             UTTypeDescription: AI Chat conversation
             UTTypeConformsTo:
               - public.data
             UTTypeTagSpecification: {}
         UILaunchScreen: {}
+        # Макет только в тёмной теме.
+        UIUserInterfaceStyle: Dark
         NSMicrophoneUsageDescription: Dictation uses the microphone to turn your speech into text. Audio is processed on this device and never saved.
         NSSpeechRecognitionUsageDescription: Dictation turns your speech into text in the message field. It works on this device when your language supports it; otherwise speech is sent to Apple for recognition.
+        NSPhotoLibraryUsageDescription: To upload an image, the app needs access to your photo gallery.
+        NSPhotoLibraryAddUsageDescription: The app saves generated videos to your Photos.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
-        UISupportedInterfaceOrientations~ipad:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.aichat.app
-        # 6 — Mac Catalyst «Optimize for Mac»: родные размеры и элементы macOS.
-        TARGETED_DEVICE_FAMILY: "1,2,6"
-        SUPPORTS_MACCATALYST: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.labs.fviu
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: Accent
 
@@ -77,8 +78,7 @@ targets:
       - target: AIChat
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.aichat.tests
-        SUPPORTS_MACCATALYST: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.labs.fviu.tests
         GENERATE_INFOPLIST_FILE: YES
 
   # UI-тесты: сценарии через настоящие алерты и меню (`-mockData`).
@@ -91,7 +91,7 @@ targets:
       - target: AIChat
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.aichat.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.labs.fviu.uitests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

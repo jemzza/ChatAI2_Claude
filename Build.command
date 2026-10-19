@@ -8,7 +8,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 ROOT="$(pwd)"
 SCHEME="AIChat"
-BUNDLE_ID="com.example.aichat.app"
+BUNDLE_ID="com.labs.fviu"
 DERIVED="$ROOT/build/DerivedData"
 TOOLS="$ROOT/.tools"
 

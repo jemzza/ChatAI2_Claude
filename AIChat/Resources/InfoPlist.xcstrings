@@ -45,6 +45,42 @@
         }
       }
     },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Permission prompt for saving generated videos to Photos. Must match project.yml.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app saves generated videos to your Photos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение сохраняет созданные видео в «Фото»."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Permission prompt for reading photos (video templates). Must match project.yml.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To upload an image, the app needs access to your photo gallery."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы загрузить изображение, приложению нужен доступ к вашей галерее."
+          }
+        }
+      }
+    },
     "NSSpeechRecognitionUsageDescription" : {
       "comment" : "Permission prompt for speech recognition (dictation). Must match project.yml.",
       "extractionState" : "manual",

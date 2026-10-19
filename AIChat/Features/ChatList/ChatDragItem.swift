@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 extension UTType {
     /// Объявлен в `project.yml` (`UTExportedTypeDeclarations`).
-    static let chatReference = UTType(exportedAs: "com.example.aichat.chat-reference")
+    static let chatReference = UTType(exportedAs: "com.labs.fviu.chat-reference")
 }
 
 /// Что переносится при перетаскивании чата: только id, не содержимое.

@@ -11,14 +11,15 @@
 
 - [x] 0.1 Новое ТЗ: `docs/task.md`, `docs/plan.md`, `CLAUDE.md` под Figma,
       Dola/PixVerse, Apphud и iOS 16.
-- [ ] 0.2 `project.yml`: iOS 16, bundle `com.labs.fviu`, только iPhone/портрет,
+- [x] 0.2 `project.yml`: bundle `com.labs.fviu`, только iPhone/портрет,
       без Mac Catalyst, тёмная тема, ApphudSDK (`exactVersion`), строки
       доступа к Фото. `Build.command` — новый bundle id.
 - [ ] 0.3 Убрать то, что не входит в ТЗ: Groq, Foundation Models, голос,
       старые настройки/сайдбар, их тесты и строки каталога. Временный корневой
       экран-заглушка. Сборка и тесты зелёные.
-- [ ] 0.4 iOS 16: ViewModel → `ObservableObject`; убрать API iOS 17+ или
-      спрятать за `#available`. Сборка под iOS 16.
+- [ ] 0.4 iOS 16: `deploymentTarget` → 16.0; ViewModel → `ObservableObject`;
+      `Mutex` → свой лок; убрать API iOS 17+ или спрятать за `#available`.
+      Сборка под iOS 16.
 - [ ] 0.5 **👤** Секреты: `gen_secrets.py` читает `NEBULA_API_TOKEN` и
       `APPHUD_API_KEY`; пользователь запускает скрипт. Тест формы ключей
       (`eyJ…`/`app_…`, длина), значения → `Bool` до `#expect`.
@@ -102,3 +103,8 @@
 ## Журнал отклонений от плана
 
 _Сюда записываем, что пошло не так и что решили иначе._
+
+- 0.2: `deploymentTarget` остался 18.0 — стартовый код использует `Mutex`,
+  `@Observable` и другие API iOS 17–18, сборка под 16 падает. Переключение на
+  16.0 перенесено в 0.4, вместе с переводом кода. Строки микрофона и
+  распознавания речи в Info.plist удалим в 0.3 вместе с голосом.
