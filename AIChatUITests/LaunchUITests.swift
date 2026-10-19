@@ -1,7 +1,7 @@
 import XCTest
 
 /// Поток первого запуска: сплэш → онбординг → пейвол → главный экран.
-/// Экраны пока — заглушки (5.3); сценарии экранов добавляются вместе с ними.
+/// Пейвол и главный пока — заглушки; сценарии экранов добавляются вместе с ними.
 @MainActor
 final class LaunchUITests: XCTestCase {
     func testFirstLaunchGoesThroughOnboardingAndPaywall() {
@@ -9,8 +9,12 @@ final class LaunchUITests: XCTestCase {
         app.launchArguments = ["-mockData", "-mockFree", "-resetOnboarding"]
         app.launch()
 
+        // Два экрана онбординга: «Continue» листает, на втором — завершает.
         let continueButton = app.buttons["Continue"]
         XCTAssertTrue(continueButton.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Ask AI anything"].exists)
+        continueButton.tap()
+        XCTAssertTrue(app.staticTexts["Turn photos into videos"].waitForExistence(timeout: 5))
         continueButton.tap()
 
         let close = app.buttons["Close"]

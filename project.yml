@@ -43,7 +43,9 @@ targets:
       path: AIChat/Info.plist
       properties:
         CFBundleDisplayName: AI Chat
-        UILaunchScreen: {}
+        # Цвет фона приложения — без чёрной вспышки перед сплэшем.
+        UILaunchScreen:
+          UIColorName: Background
         # Inter (SIL OFL 1.1, AIChat/Resources/Fonts/Inter-OFL.txt) — шрифт макета.
         UIAppFonts:
           - Inter-Regular.ttf

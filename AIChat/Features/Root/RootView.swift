@@ -15,10 +15,8 @@ struct RootView: View {
         ZStack {
             switch router.stage {
             case .onboarding:
-                PlaceholderScreen(title: "Onboarding", actionTitle: "Continue") {
-                    router.finishOnboarding()
-                }
-                .transition(.opacity)
+                OnboardingView { router.finishOnboarding() }
+                    .transition(.opacity)
             case .main:
                 NavigationStack(path: $router.path) {
                     PlaceholderScreen(title: "Your AI tools, ready to go", actionTitle: "Ask anything…") {

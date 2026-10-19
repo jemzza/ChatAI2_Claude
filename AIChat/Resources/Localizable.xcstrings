@@ -87,6 +87,26 @@
         }
       }
     },
+    "Answers, emails, ideas and plans in seconds" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ответы, письма, идеи и планы за секунды"
+          }
+        }
+      }
+    },
+    "Ask AI anything" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спросите AI о чём угодно"
+          }
+        }
+      }
+    },
     "Ask anything…" : {
       "localizations" : {
         "ru" : {
@@ -205,12 +225,22 @@
         }
       }
     },
-    "Onboarding" : {
+    "Loading" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Онбординг"
+            "value" : "Загрузка"
+          }
+        }
+      }
+    },
+    "Page %lld of %lld" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страница %lld из %lld"
           }
         }
       }
@@ -222,6 +252,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фото"
+          }
+        }
+      }
+    },
+    "Pick a template — AI animates your photo" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите шаблон — AI оживит ваше фото"
           }
         }
       }
@@ -275,6 +315,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "Turn photos into videos" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Превращайте фото в видео"
           }
         }
       }
