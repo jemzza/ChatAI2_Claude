@@ -12,7 +12,15 @@ struct AIChatApp: App {
         WindowGroup {
             switch container.environment {
             case .live:
+                #if DEBUG
+                if container.launchOptions.showComponentGallery {
+                    ComponentGallery()
+                } else {
+                    LiveRoot(container: container)
+                }
+                #else
                 LiveRoot(container: container)
+                #endif
             case .unitTests:
                 EmptyView()
             }

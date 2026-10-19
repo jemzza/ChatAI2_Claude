@@ -72,6 +72,11 @@ struct DependencyPlanTests {
                 == DependencyPlan(storage: .disk, network: .system, model: .failing(.rateLimited)))
     }
 
+    @Test func componentGalleryFlag() {
+        #expect(LaunchOptions(arguments: ["app", "-componentGallery"]).showComponentGallery)
+        #expect(!LaunchOptions(arguments: ["app"]).showComponentGallery)
+    }
+
     @Test func subscriptionFlagsSwitchOnlySubscription() {
         #expect(DependencyPlan(options: .none).subscription == .apphud)
         #expect(DependencyPlan(options: LaunchOptions(arguments: ["app", "-mockPremium"]))

@@ -18,6 +18,8 @@ extension ShapeStyle where Self == Color {
     static var appStroke: Color { .white.opacity(0.3) }
     /// `background/tertiary` — подложка сегментов и строк (8% белого).
     static var appFillTertiary: Color { .white.opacity(0.08) }
+    /// `separator/secondary` — обводка тостов (16% белого).
+    static var appSeparator: Color { .white.opacity(0.16) }
     /// `background/quaternary` (14% белого).
     static var appFillQuaternary: Color { .white.opacity(0.14) }
     static var appGradientStart: Color { Color("GradientStart") }
@@ -39,7 +41,9 @@ enum AppFont {
     /// Заголовки пустых состояний и секций — Inter SemiBold 20.
     static let title3 = inter("Inter-SemiBold", 20, relativeTo: .title3)
     static let title3Medium = inter("Inter-Medium", 20, relativeTo: .title3)
-    /// Кнопки, заголовки навбара — Inter SemiBold 16.
+    /// Заголовок навбара — Inter SemiBold 18.
+    static let navigationTitle = inter("Inter-SemiBold", 18, relativeTo: .headline)
+    /// Кнопки, заголовки секций — Inter SemiBold 16.
     static let headline = inter("Inter-SemiBold", 16, relativeTo: .headline)
     static let bodyMedium = inter("Inter-Medium", 16, relativeTo: .body)
     static let body = inter("Inter-Regular", 16, relativeTo: .body)
@@ -70,6 +74,8 @@ enum AppMetrics {
     static let cardRadius: CGFloat = 24
     /// Строки списков и настроек.
     static let rowRadius: CGFloat = 16
+    /// Высота строки настроек и истории.
+    static let rowHeight: CGFloat = 44
     /// Чипы и бейджи — капсула.
     static let chipRadius: CGFloat = 32
     /// Высота основной кнопки.
