@@ -13,4 +13,16 @@ protocol SubscriptionService: AnyObject {
 
     /// ID пользователя для API (`user_id`) — Apphud User ID.
     var userID: String { get }
+
+    /// Тарифы пейвола `main` в порядке из Apphud.
+    func paywallPlans() async throws(SubscriptionError) -> [SubscriptionPlan]
+
+    /// Отметка «пейвол показан» — для аналитики Apphud.
+    func paywallShown()
+
+    /// Покупка тарифа. Ошибка — `SubscriptionError.purchaseFailed`; отмена — `.cancelled`.
+    func purchase(planID: SubscriptionPlan.ID) async throws(SubscriptionError) -> PurchaseOutcome
+
+    /// Restore Purchases. Возвращает `isPremium` после восстановления.
+    func restore() async throws(SubscriptionError) -> Bool
 }
