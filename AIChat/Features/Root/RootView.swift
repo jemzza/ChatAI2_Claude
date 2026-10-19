@@ -47,8 +47,8 @@ struct RootView: View {
             TemplatesView(dependencies: dependencies)
         case let .templatePreview(templateId, category):
             TemplatePreviewView(templateId: templateId, category: category, dependencies: dependencies)
-        case .generation:
-            PlaceholderScreen(title: "Result", showsBack: true)
+        case let .generation(id):
+            GenerationView(id: id, dependencies: dependencies)
         case .history:
             PlaceholderScreen(title: "History", showsBack: true)
         case .settings:
