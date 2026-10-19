@@ -111,6 +111,26 @@ struct AppDatabase: Sendable {
             // Ответ теперь приходит целиком: статус «идёт генерация» переименован.
             try db.execute(sql: "UPDATE message SET status = 'generating' WHERE status = 'streaming'")
         }
+
+        migrator.registerMigration("v5") { db in
+            // Генерации видео: история, фоновое продолжение, «Try again».
+            try db.create(table: VideoGenerationRecord.databaseTableName) { t in
+                t.primaryKey("id", .blob)
+                t.column("templateId", .integer).notNull()
+                t.column("templateName", .text).notNull()
+                t.column("aspect", .text).notNull()
+                t.column("quality", .text).notNull()
+                t.column("sourceImageName", .text).notNull()
+                t.column("status", .text).notNull().indexed()
+                t.column("serverId", .integer)
+                t.column("videoURL", .text)
+                t.column("localVideoName", .text)
+                t.column("failureKind", .text)
+                t.column("failureRetryAt", .double)
+                t.column("isViewed", .boolean).notNull().defaults(to: false)
+                t.column("createdAt", .double).notNull().indexed()
+            }
+        }
         return migrator
     }
 }

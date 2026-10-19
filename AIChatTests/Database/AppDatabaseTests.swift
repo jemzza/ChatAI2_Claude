@@ -28,7 +28,7 @@ struct AppDatabaseTests {
         let queue = try DatabaseQueue()
         _ = try AppDatabase(queue)
         _ = try AppDatabase(queue)
-        #expect(try queue.read { try AppDatabase.migrator.appliedIdentifiers($0) } == ["v1", "v2", "v3", "v4"])
+        #expect(try queue.read { try AppDatabase.migrator.appliedIdentifiers($0) } == ["v1", "v2", "v3", "v4", "v5"])
     }
 
     @Test func recordsRoundTripDomainModels() throws {
@@ -204,7 +204,7 @@ struct AppDatabaseTests {
         let database = try AppDatabase(queue)
 
         try await queue.read { db in
-            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4"])
+            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4", "v5"])
             #expect(try ChatRecord.byLastActivity().fetchAll(db).map(\.chat) == [chatB, chatA])
             #expect(try MessageRecord.chronological().fetchAll(db).map { try $0.message() } == stored)
             #expect(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM chat WHERE folderId IS NOT NULL") == 0)
@@ -285,7 +285,7 @@ struct AppDatabaseTests {
         _ = try AppDatabase(queue)
 
         try await queue.read { db throws in
-            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4"])
+            #expect(try AppDatabase.migrator.appliedIdentifiers(db) == ["v1", "v2", "v3", "v4", "v5"])
             #expect(try db.tableExists("folder"))
             #expect(try db.tableExists("attachment"))
             #expect(try ChatRecord.fetchAll(db).map(\.chat) == [chat])

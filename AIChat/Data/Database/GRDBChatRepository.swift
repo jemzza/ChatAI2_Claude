@@ -47,22 +47,10 @@ final class GRDBChatRepository: ChatRepository {
         }
     }
 
-    /// Первое значение — сразу после подписки, дальше — после каждой транзакции,
-    /// затронувшей прочитанные таблицы (одинаковые снимки подряд отбрасываются).
-    /// Ошибка чтения завершает поток. Отмена потребителя останавливает наблюдение.
     private func observe<Value: Equatable & Sendable>(
         _ fetch: @escaping @Sendable (Database) throws -> Value
     ) -> AsyncStream<Value> {
-        let observation = ValueObservation.trackingConstantRegion(fetch).removeDuplicates()
-        return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
-            let cancellable = observation.start(
-                in: writer,
-                scheduling: .async(onQueue: observationQueue),
-                onError: { _ in continuation.finish() },
-                onChange: { continuation.yield($0) }
-            )
-            continuation.onTermination = { _ in cancellable.cancel() }
-        }
+        writer.observe(on: observationQueue, fetch)
     }
 
     // MARK: Чаты

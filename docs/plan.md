@@ -80,7 +80,7 @@
 
 ## 4. Видео: данные и логика
 
-- [ ] 4.1 Модели `VideoTemplate`, `VideoGeneration`; миграция таблицы;
+- [x] 4.1 Модели `VideoTemplate`, `VideoGeneration`; миграция таблицы;
       `VideoRepository` (GRDB + in-memory), контрактные тесты.
       Готово, когда: контрактные тесты на GRDB и in-memory одинаковы.
       `feat: add video generation storage`
@@ -205,3 +205,8 @@ _Сюда записываем, что пошло не так и что реши
   `-mockSlowStream` → `-mockSlowReply`. `ChatService` уже подключён в
   `AppContainer` и запускает outbox. Реальный ответ Dola из симулятора не
   проверен (DNS), с Mac — проверен в 1.3.
+- 4.1: генерация хранит имена файлов (фото, скачанное видео), а не пути —
+  контейнер приложения меняет путь между установками. Статусы: `creating`
+  (запрос ещё не принят) → `generating` → `succeeded`/`failed`. Наблюдение
+  GRDB вынесено в общий `DatabaseWriter.observe(on:_:)`. Каталог шаблонов в
+  базе не храним — это не данные пользователя (кэш — в 4.2).
