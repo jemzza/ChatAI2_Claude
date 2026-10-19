@@ -19,6 +19,7 @@ struct SettingsStoreTests {
 
         #expect(store.notifyOnReply == false)
         #expect(store.notifyOnQueuedSent == false)
+        #expect(store.hasCompletedOnboarding == false)
     }
 
     @Test func changesSurviveNewInstance() throws {
@@ -27,10 +28,12 @@ struct SettingsStoreTests {
 
         let store = UserDefaultsSettingsStore(defaults: defaults)
         store.notifyOnReply = true
+        store.hasCompletedOnboarding = true
         store.notifyOnQueuedSent = true
 
         let reloaded = UserDefaultsSettingsStore(defaults: defaults)
         #expect(reloaded.notifyOnReply == true)
+        #expect(reloaded.hasCompletedOnboarding == true)
         #expect(reloaded.notifyOnQueuedSent == true)
 
         reloaded.notifyOnReply = false

@@ -72,6 +72,13 @@ struct DependencyPlanTests {
                 == DependencyPlan(storage: .disk, network: .system, model: .failing(.rateLimited)))
     }
 
+    @MainActor @Test func resetOnboardingFlagClearsSetting() {
+        let settings = InMemorySettingsStore(hasCompletedOnboarding: true)
+        _ = AppContainer(environment: .live, launchOptions: LaunchOptions(arguments: ["app", "-resetOnboarding"]),
+                         settings: settings)
+        #expect(!settings.hasCompletedOnboarding)
+    }
+
     @Test func componentGalleryFlag() {
         #expect(LaunchOptions(arguments: ["app", "-componentGallery"]).showComponentGallery)
         #expect(!LaunchOptions(arguments: ["app"]).showComponentGallery)

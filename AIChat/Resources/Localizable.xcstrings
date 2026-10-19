@@ -77,12 +77,52 @@
         }
       }
     },
+    "AI Video" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI-видео"
+          }
+        }
+      }
+    },
+    "Ask anything…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спросите что угодно…"
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Назад"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить"
           }
         }
       }
@@ -123,6 +163,16 @@
         }
       }
     },
+    "Create anything you want" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создавайте что угодно"
+          }
+        }
+      }
+    },
     "Dark" : {
       "comment" : "Appearance option: always dark theme.",
       "localizations" : {
@@ -134,6 +184,16 @@
         }
       }
     },
+    "History" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История"
+          }
+        }
+      }
+    },
     "Light" : {
       "comment" : "Appearance option: always light theme.",
       "localizations" : {
@@ -141,6 +201,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Светлое"
+          }
+        }
+      }
+    },
+    "Onboarding" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онбординг"
           }
         }
       }
@@ -179,12 +249,42 @@
         }
       }
     },
+    "Result" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результат"
+          }
+        }
+      }
+    },
     "Send" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отправить"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "Your AI tools, ready to go" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши AI-инструменты готовы к работе"
           }
         }
       }

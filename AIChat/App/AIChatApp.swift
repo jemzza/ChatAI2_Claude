@@ -36,6 +36,10 @@ private struct LiveRoot: View {
         case loading
         case ready(AppDependencies)
         case failed
+
+        var isReady: Bool {
+            if case .ready = self { true } else { false }
+        }
     }
 
     @State private var phase = Phase.loading
@@ -45,14 +49,12 @@ private struct LiveRoot: View {
         Group {
             switch phase {
             case .loading:
-                Color.appBackground.ignoresSafeArea()
+                SplashView()
+                    .transition(.opacity)
             case let .ready(dependencies):
-                // Временная заглушка: экраны по Figma появятся в разделах 5–6 плана.
-                Text("AI Chat")
-                    .font(.title2.weight(.semibold))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.appBackground.ignoresSafeArea())
-                    // Сеть и запуск → outbox; живёт столько же, сколько окно.
+                RootView(dependencies: dependencies, settings: container.settings)
+                    .transition(.opacity)
+                    // Сеть и запуск → outbox и незавершённые генерации; живут, пока живо окно.
                     .task { await dependencies.chat.run() }
                     .task { await dependencies.video.run() }
                     .onChange(of: scenePhase) { phase in
@@ -65,19 +67,27 @@ private struct LiveRoot: View {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.largeTitle)
                     Text("Couldn't open chat history")
-                        .font(.headline)
+                        .font(AppFont.headline)
                     Text("Please restart the app.")
-                        .foregroundStyle(.secondary)
+                        .font(AppFont.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
                 }
+                .foregroundStyle(Color.appAccent)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.appBackground.ignoresSafeArea())
             }
         }
+        .animation(.easeInOut(duration: 0.35), value: phase.isReady)
         .task {
             guard case .loading = phase else { return }
+            // Сплэш виден хотя бы секунду — без мигания на быстром запуске.
+            async let minimumSplash: Void = (try? await Task.sleep(for: .seconds(1))) ?? ()
             do {
-                phase = .ready(try await container.makeDependencies())
+                let dependencies = try await container.makeDependencies()
+                await minimumSplash
+                phase = .ready(dependencies)
             } catch {
+                await minimumSplash
                 phase = .failed
             }
         }

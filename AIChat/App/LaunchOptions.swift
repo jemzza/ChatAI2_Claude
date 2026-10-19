@@ -8,7 +8,8 @@ import Foundation
 /// - `-mockError 429|401|402|403|500|offline` — сеть отвечает этой ошибкой;
 /// - `-mockSlowReply` — фейковый AI отвечает через несколько секунд;
 /// - `-mockPremium` / `-mockFree` — подписка-фейк с активной подпиской / без неё;
-/// - `-componentGallery` — вместо приложения экран со всеми общими компонентами.
+/// - `-componentGallery` — вместо приложения экран со всеми общими компонентами;
+/// - `-resetOnboarding` — показать онбординг, как при первом запуске.
 struct LaunchOptions: Hashable, Sendable {
     var useMockData = false
     var forceOffline = false
@@ -17,6 +18,7 @@ struct LaunchOptions: Hashable, Sendable {
     /// `nil` — настоящий Apphud.
     var mockPremium: Bool?
     var showComponentGallery = false
+    var resetOnboarding = false
 
     static let none = LaunchOptions()
 
@@ -30,6 +32,7 @@ struct LaunchOptions: Hashable, Sendable {
         forceOffline = arguments.contains("-mockOffline")
         slowReply = arguments.contains("-mockSlowReply")
         showComponentGallery = arguments.contains("-componentGallery")
+        resetOnboarding = arguments.contains("-resetOnboarding")
         if arguments.contains("-mockPremium") {
             mockPremium = true
         } else if arguments.contains("-mockFree") {
