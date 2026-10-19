@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Ответ ассистента в блочном markdown: заголовки, списки, цитаты, разделители
-/// и карточки кода. Шрифт задаёт родитель через `textStyle(.assistantMessage)`.
+/// и карточки кода. Стиль — по макету: Inter 16, текст 80% белого, жирный — SemiBold,
+/// заголовки — жирные с фирменным градиентом.
 struct MarkdownView: View {
     let text: String
     var copyCode: (String) -> Void = { _ in }
@@ -19,12 +20,19 @@ struct MarkdownView: View {
     @ViewBuilder
     private func blockView(_ block: MarkdownBlock) -> some View {
         switch block {
-        case let .heading(level, text):
-            InlineText(text, font: Self.headingFont(level: level))
-                .padding(.top, level <= 2 ? 4 : 0)
+        case let .heading(_, text):
+            InlineText(text, font: AppFont.bodyBold)
+                .foregroundStyle(AppGradient.primary)
                 .accessibilityAddTraits(.isHeader)
         case let .paragraph(text):
-            InlineText(text)
+            if let title = Self.boldLine(text) {
+                // Строка целиком жирным — подзаголовок ответа, как в макете (градиент).
+                InlineText(title, font: AppFont.bodyBold)
+                    .foregroundStyle(AppGradient.primary)
+                    .accessibilityAddTraits(.isHeader)
+            } else {
+                InlineText(text)
+            }
         case let .list(ordered, items):
             ListBlock(ordered: ordered, items: items)
         case let .code(language, code, _):
@@ -41,13 +49,16 @@ struct MarkdownView: View {
         }
     }
 
-    private static func headingFont(level: Int) -> Font {
-        switch level {
-        case 1: .title2.bold()
-        case 2: .title3.bold()
-        case 3: .headline
-        default: .subheadline.bold()
-        }
+}
+
+extension MarkdownView {
+    /// `**Заголовок**` одной строкой без другой разметки → «Заголовок»; иначе `nil`.
+    static func boldLine(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("**"), trimmed.hasSuffix("**"), trimmed.count > 4 else { return nil }
+        let inner = String(trimmed.dropFirst(2).dropLast(2))
+        guard !inner.contains("**"), !inner.contains("\n") else { return nil }
+        return inner
     }
 }
 
@@ -57,7 +68,7 @@ private struct InlineText: View {
     let source: String
     let font: Font
 
-    init(_ source: String, font: Font = .body) {
+    init(_ source: String, font: Font = AppFont.body) {
         self.source = source
         self.font = font
     }
@@ -77,9 +88,15 @@ private struct InlineText: View {
         guard var text = try? AttributedString(markdown: source, options: options) else {
             return AttributedString(source)
         }
-        // `.fontDesign(.serif)` у ответа перебивает стандартный вид `кода` — задаём моноширинный явно.
-        for run in text.runs where run.inlinePresentationIntent?.contains(.code) == true {
-            text[run.range].font = font.monospaced()
+        for run in text.runs {
+            guard let intent = run.inlinePresentationIntent else { continue }
+            if intent.contains(.code) {
+                text[run.range].font = .system(size: 15, design: .monospaced)
+            } else if intent.contains(.stronglyEmphasized) {
+                // У Inter своё начертание: синтетический bold заметно хуже.
+                text[run.range].font = AppFont.bodySemibold
+                text[run.range].foregroundColor = .white
+            }
         }
         return text
     }
@@ -110,12 +127,11 @@ private struct ListBlock: View {
         if let number = item.number {
             Text("\(number).")
                 .monospacedDigit()
-                .foregroundStyle(.secondary)
         } else {
             // Маркер — фигура, а не символ «•»: не тащим служебный знак в String Catalog.
             let size = bulletSize
             Circle()
-                .fill(.secondary)
+                .fill(Color.white.opacity(0.8))
                 .frame(width: size, height: size)
                 .alignmentGuide(.firstTextBaseline) { dimensions in dimensions[.bottom] + size / 2 }
                 .accessibilityHidden(true)

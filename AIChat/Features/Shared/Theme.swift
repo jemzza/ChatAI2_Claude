@@ -46,6 +46,8 @@ enum AppFont {
     /// Кнопки, заголовки секций — Inter SemiBold 16.
     static let headline = inter("Inter-SemiBold", 16, relativeTo: .headline)
     static let bodyMedium = inter("Inter-Medium", 16, relativeTo: .body)
+    static let bodySemibold = inter("Inter-SemiBold", 16, relativeTo: .body)
+    static let bodyBold = inter("Inter-Bold", 16, relativeTo: .body)
     static let body = inter("Inter-Regular", 16, relativeTo: .body)
     /// Сообщения чата, подписи карточек — Inter 14.
     static let subheadlineMedium = inter("Inter-Medium", 14, relativeTo: .subheadline)

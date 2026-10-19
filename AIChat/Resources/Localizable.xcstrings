@@ -97,6 +97,16 @@
         }
       }
     },
+    "Access to the AI service was denied. Please try again later." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к AI-сервису запрещён. Попробуйте позже."
+          }
+        }
+      }
+    },
     "Animate" : {
       "localizations" : {
         "ru" : {
@@ -211,6 +221,16 @@
         }
       }
     },
+    "Copy failed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось скопировать"
+          }
+        }
+      }
+    },
     "Couldn't load plans" : {
       "localizations" : {
         "ru" : {
@@ -239,6 +259,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось восстановить покупки. Проверьте подключение и попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "Couldn't send message" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось отправить сообщение"
           }
         }
       }
@@ -274,6 +304,26 @@
         }
       }
     },
+    "Explain it simply" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Объясни простыми словами"
+          }
+        }
+      }
+    },
+    "Generating a response" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Генерирую ответ"
+          }
+        }
+      }
+    },
     "Get results in seconds" : {
       "localizations" : {
         "ru" : {
@@ -284,12 +334,32 @@
         }
       }
     },
+    "Help me write an email" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помоги написать письмо"
+          }
+        }
+      }
+    },
     "History" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "История"
+          }
+        }
+      }
+    },
+    "How can I help you?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чем могу помочь?"
           }
         }
       }
@@ -345,6 +415,16 @@
         }
       }
     },
+    "No internet connection. Check your connection and try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет подключения к интернету. Проверьте сеть и попробуйте ещё раз."
+          }
+        }
+      }
+    },
     "Nothing to restore" : {
       "localizations" : {
         "ru" : {
@@ -396,12 +476,42 @@
         }
       }
     },
+    "Pick a suggestion below or ask your own question" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите подсказку ниже или задайте свой вопрос"
+          }
+        }
+      }
+    },
     "Pick a template — AI animates your photo" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выберите шаблон — AI оживит ваше фото"
+          }
+        }
+      }
+    },
+    "Pinned" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закреплён"
+          }
+        }
+      }
+    },
+    "Plan my day" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спланируй мой день"
           }
         }
       }
@@ -465,6 +575,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Готово за секунды"
+          }
+        }
+      }
+    },
+    "Regenerate" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сгенерировать заново"
           }
         }
       }
@@ -569,6 +689,56 @@
         }
       }
     },
+    "The AI service is temporarily unavailable. Please try again later." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI-сервис временно недоступен. Попробуйте позже."
+          }
+        }
+      }
+    },
+    "The response was interrupted." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ответ прервался."
+          }
+        }
+      }
+    },
+    "The server is having trouble right now. Please try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На сервере неполадки. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "Too many requests. Please wait a moment and try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слишком много запросов. Подождите немного и попробуйте снова."
+          }
+        }
+      }
+    },
+    "Translate a text" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переведи текст"
+          }
+        }
+      }
+    },
     "Try again" : {
       "localizations" : {
         "ru" : {
@@ -629,12 +799,32 @@
         }
       }
     },
+    "Will send when online" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправится, когда появится сеть"
+          }
+        }
+      }
+    },
     "Year %@" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Год %@"
+          }
+        }
+      }
+    },
+    "Your **AI assistant** for anything" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш **AI-ассистент** для любых задач"
           }
         }
       }

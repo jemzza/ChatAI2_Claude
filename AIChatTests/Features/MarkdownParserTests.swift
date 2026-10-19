@@ -111,4 +111,11 @@ struct MarkdownParserTests {
     @Test func windowsLineEndings() {
         #expect(MarkdownParser.parse("# T\r\nbody\r\n") == [.heading(level: 1, text: "T"), .paragraph("body")])
     }
+
+    @Test func wholeBoldLineIsTreatedAsTitle() {
+        #expect(MarkdownView.boldLine("**Welcome to the team, Alex!**") == "Welcome to the team, Alex!")
+        #expect(MarkdownView.boldLine("**Bold** and plain") == nil)
+        #expect(MarkdownView.boldLine("Plain") == nil)
+        #expect(MarkdownView.boldLine("**a** **b**") == nil)
+    }
 }

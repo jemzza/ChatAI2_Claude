@@ -41,8 +41,8 @@ struct RootView: View {
     @ViewBuilder
     private func destination(_ route: AppRoute) -> some View {
         switch route {
-        case .chat:
-            PlaceholderScreen(title: "AI Chat", showsBack: true)
+        case let .chat(chatId, prompt):
+            ChatView(chatId: chatId, prompt: prompt, dependencies: dependencies)
         case .templates:
             PlaceholderScreen(title: "AI Video", showsBack: true)
         case .templatePreview, .generation:

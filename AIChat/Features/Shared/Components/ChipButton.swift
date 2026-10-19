@@ -7,6 +7,8 @@ struct ChipButton: View {
         case outline
         /// Выбранный залит градиентом, остальные — тёмная подложка.
         case filled
+        /// Подсказка в пустом чате: `card` 80%, обводка 12% белого, Inter 14.
+        case suggestion
     }
 
     let title: String
@@ -18,11 +20,11 @@ struct ChipButton: View {
         Button(action: action) {
             // Текст чипа — данные (категория из API) или уже локализованная подсказка.
             Text(verbatimTitle)
-                .font(AppFont.caption)
-                .foregroundStyle(Color.appAccent)
+                .font(style == .suggestion ? AppFont.subheadline : AppFont.caption)
+                .foregroundStyle(Color.appAccent.opacity(style == .suggestion ? 0.9 : 1))
                 .lineLimit(1)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, style == .suggestion ? 14 : 12)
+                .padding(.vertical, style == .suggestion ? 10 : 8)
                 .background(background)
                 .overlay(border)
                 .contentShape(Capsule())
@@ -37,6 +39,8 @@ struct ChipButton: View {
     private var background: some View {
         if style == .filled, isSelected {
             Capsule().fill(AppGradient.primary)
+        } else if style == .suggestion {
+            Capsule().fill(Color.appSurface.opacity(0.8))
         } else {
             Capsule().fill(Color.appFillTertiary)
         }
@@ -46,6 +50,8 @@ struct ChipButton: View {
     private var border: some View {
         if style == .outline, isSelected {
             Capsule().strokeBorder(AppGradient.primary, lineWidth: 1)
+        } else if style == .suggestion {
+            Capsule().strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         } else if !(style == .filled && isSelected) {
             Capsule().strokeBorder(Color.appSeparator, lineWidth: 1)
         }
