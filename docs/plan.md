@@ -84,7 +84,7 @@
       `VideoRepository` (GRDB + in-memory), контрактные тесты.
       Готово, когда: контрактные тесты на GRDB и in-memory одинаковы.
       `feat: add video generation storage`
-- [ ] 4.2 `PixverseClient`: шаблоны, `template2video` (multipart), `status`; тесты.
+- [x] 4.2 `PixverseClient`: шаблоны, `template2video` (multipart), `status`; тесты.
       Готово, когда: multipart с картинкой и полями собирается верно (тест),
       статусы `generating/success/error` и 404 маппятся. `feat: add PixVerse client`
 - [ ] 4.3 `VideoGenerationService`: кроп под формат, создание, опрос статуса,
@@ -210,3 +210,6 @@ _Сюда записываем, что пошло не так и что реши
   (запрос ещё не принят) → `generating` → `succeeded`/`failed`. Наблюдение
   GRDB вынесено в общий `DatabaseWriter.observe(on:_:)`. Каталог шаблонов в
   базе не храним — это не данные пользователя (кэш — в 4.2).
+- 4.2: последний каталог шаблонов сохраняется файлом и отдаётся без сети
+  (не в базе — это не данные пользователя). Неактивные шаблоны (`is_active`
+  = 0) отбрасываются. Неизвестный статус сервера считаем «ещё генерируется».
