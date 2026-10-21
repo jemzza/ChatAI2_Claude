@@ -101,7 +101,8 @@ final class GenerationViewModel: ObservableObject {
 
     func share() async {
         do {
-            shareURL = try await localFile()
+            let file = try await localFile()
+            shareURL = Self.shareableCopy(of: file, named: generation?.templateName ?? "") ?? file
         } catch {
             toast = ToastMessage(kind: .failure, text: "Couldn't load video")
         }
@@ -114,6 +115,29 @@ final class GenerationViewModel: ObservableObject {
             onReplaced(try await replace(generation, data))
         } catch {
             toast = ToastMessage(kind: .failure, text: "Upload failed")
+        }
+    }
+
+    /// В share sheet видно имя файла: вместо UUID — название шаблона. Жёсткая ссылка
+    /// во временной папке (без копирования данных), не вышло — `nil`.
+    static func shareableCopy(of file: URL, named name: String) -> URL? {
+        let base = name.components(separatedBy: CharacterSet(charactersIn: "/:\\").union(.whitespacesAndNewlines))
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Share", isDirectory: true)
+        let target = directory.appendingPathComponent(base.isEmpty ? "Video" : base)
+            .appendingPathExtension(file.pathExtension)
+        do {
+            try? FileManager.default.removeItem(at: directory)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            do {
+                try FileManager.default.linkItem(at: file, to: target)
+            } catch {
+                try FileManager.default.copyItem(at: file, to: target)
+            }
+            return target
+        } catch {
+            return nil
         }
     }
 

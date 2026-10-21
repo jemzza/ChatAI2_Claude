@@ -460,7 +460,7 @@ private struct MasonryGrid<Item: Identifiable, Cell: View>: View {
             ForEach(0..<2, id: \.self) { column in
                 LazyVStack(spacing: spacing) {
                     ForEach(columns[column]) { item in
-                        cell(item).frame(height: height(item, columnWidth))
+                        cell(item).frame(width: columnWidth, height: height(item, columnWidth))
                     }
                 }
                 .frame(width: columnWidth)
@@ -592,17 +592,18 @@ private struct LocalImageView: View {
     @State private var image: UIImage?
 
     var body: some View {
-        ZStack {
-            Color.appSurface
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
+        // Как в `VideoThumbnailView`: картинка в overlay не раздвигает карточку.
+        Color.appSurface
+            .overlay {
+                if let image {
+                    Image(uiImage: image).resizable().scaledToFill()
+                }
             }
-        }
-        .clipped()
-        .task(id: url) {
-            image = await Task.detached(priority: .utility) {
-                (try? Data(contentsOf: url)).flatMap { ImageDownscaler.jpeg(from: $0) }.flatMap(UIImage.init(data:))
-            }.value
-        }
+            .clipped()
+            .task(id: url) {
+                image = await Task.detached(priority: .utility) {
+                    (try? Data(contentsOf: url)).flatMap { ImageDownscaler.jpeg(from: $0) }.flatMap(UIImage.init(data:))
+                }.value
+            }
     }
 }

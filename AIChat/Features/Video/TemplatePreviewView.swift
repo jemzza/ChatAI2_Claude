@@ -43,17 +43,14 @@ struct TemplatePreviewView: View {
                     PhotoSlot(state: model.photo, onAdd: addPhoto, onRemove: model.removePhoto)
                     VStack(spacing: 8) {
                         OptionRow(title: "Format", value: Text(model.aspect.rawValue)) { toggle(.format) }
-                            .overlay(alignment: .bottomTrailing) {
-                                if dropdown == .format { formatMenu }
+                            .anchorPreference(key: DropdownAnchorKey.self, value: .bounds) {
+                                dropdown == .format ? $0 : nil
                             }
-                            .zIndex(dropdown == .format ? 2 : 0)
                         OptionRow(title: "Quality", value: Text(model.quality.title)) { toggle(.quality) }
-                            .overlay(alignment: .bottomTrailing) {
-                                if dropdown == .quality { qualityMenu }
+                            .anchorPreference(key: DropdownAnchorKey.self, value: .bounds) {
+                                dropdown == .quality ? $0 : nil
                             }
-                            .zIndex(dropdown == .quality ? 2 : 0)
                     }
-                    .zIndex(1)
                 }
                 .padding(.horizontal, AppMetrics.sideInset)
                 .padding(.vertical, 16)
@@ -67,13 +64,21 @@ struct TemplatePreviewView: View {
             .padding(.bottom, 16)
         }
         .background(Color.appBackground.ignoresSafeArea())
-        // Тап мимо списка закрывает его без изменений.
-        .overlay {
-            if dropdown != nil {
-                Color.black.opacity(0.001)
-                    .ignoresSafeArea()
-                    .onTapGesture { withAnimation(.easeOut(duration: 0.2)) { dropdown = nil } }
-                    .zIndex(0)
+        // Список и «тап мимо» — в одном слое поверх экрана: ловушка тапов под списком,
+        // список прижат к нижнему правому углу своей строки. Если бы ловушка лежала
+        // отдельным overlay, она перехватывала бы и тапы по пунктам.
+        .overlayPreferenceValue(DropdownAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if let anchor, let dropdown {
+                    let row = proxy[anchor]
+                    ZStack(alignment: .topLeading) {
+                        Color.black.opacity(0.001)
+                            .ignoresSafeArea()
+                            .onTapGesture { withAnimation(.easeOut(duration: 0.2)) { self.dropdown = nil } }
+                        menu(for: dropdown)
+                            .frame(width: row.maxX, height: row.maxY, alignment: .bottomTrailing)
+                    }
+                }
             }
         }
         .toast($model.toast)
@@ -102,6 +107,14 @@ struct TemplatePreviewView: View {
 
     private func toggle(_ menu: Dropdown) {
         withAnimation(.easeOut(duration: 0.2)) { dropdown = dropdown == menu ? nil : menu }
+    }
+
+    @ViewBuilder
+    private func menu(for dropdown: Dropdown) -> some View {
+        switch dropdown {
+        case .format: formatMenu
+        case .quality: qualityMenu
+        }
     }
 
     private var formatMenu: some View {
@@ -283,6 +296,15 @@ private struct OptionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableButtonStyle())
+    }
+}
+
+/// Рамка строки, у которой открыт выпадающий список.
+private struct DropdownAnchorKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = value ?? nextValue()
     }
 }
 

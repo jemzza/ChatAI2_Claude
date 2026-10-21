@@ -37,8 +37,14 @@ final class NavigationUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Dense Snowflakes"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Create"].isEnabled)
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Format")).firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["Portrait · Stories"].waitForExistence(timeout: 3))
+        let format = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Format")).firstMatch
+        format.tap()
+        let portrait = app.staticTexts["Portrait · Stories"]
+        XCTAssertTrue(portrait.waitForExistence(timeout: 3))
+        // Выбор пункта меняет значение строки (а не просто закрывает список).
+        portrait.tap()
+        XCTAssertTrue(portrait.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(format.label.contains("9:16"), format.label)
     }
 
     /// История: чаты по группам, переименование через свайп.

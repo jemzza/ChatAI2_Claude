@@ -95,11 +95,12 @@ struct GenerationView: View {
     }
 
     private func result(_ url: URL) -> some View {
+        // По макету: видео по центру свободного места (9:16 — во всю высоту), кнопки — внизу.
         VStack(spacing: 16) {
-            Spacer(minLength: 0)
             ResultPlayer(url: url, aspect: model.aspect, isPlaying: model.isPlaying,
                          onTap: model.togglePlayback, onReplace: replace)
                 .overlay { saveCard }
+                .frame(maxHeight: .infinity)
             HStack(spacing: 16) {
                 Button {
                     Task { await model.share() }
@@ -116,9 +117,9 @@ struct GenerationView: View {
                     Task { await model.save() }
                 }
             }
-            Spacer(minLength: 0)
         }
         .padding(.horizontal, AppMetrics.sideInset)
+        .padding(.top, 8)
         .padding(.bottom, 16)
     }
 

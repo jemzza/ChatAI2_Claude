@@ -103,4 +103,15 @@ struct GenerationViewModelTests {
 
         #expect(opened == [newId])
     }
+
+    @Test func sharedFileIsNamedAfterTemplate() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
+        try Data([1, 2, 3]).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+
+        let named = try #require(GenerationViewModel.shareableCopy(of: file, named: "Clay / Fool"))
+        #expect(named.lastPathComponent == "Clay Fool.mp4")
+        #expect(try Data(contentsOf: named) == Data([1, 2, 3]))
+        #expect(GenerationViewModel.shareableCopy(of: file, named: " ")?.lastPathComponent == "Video.mp4")
+    }
 }
