@@ -560,8 +560,9 @@ private struct VideoHistoryCard: View {
         }
     }
 
+    /// Скачанный файл, а если кэш очистили — ссылка на сервер.
     private var resultURL: URL? {
-        generation.localVideoName.map { media.videoURL(named: $0) } ?? generation.videoURL
+        generation.localVideoName.flatMap(media.localVideoURL(named:)) ?? generation.videoURL
     }
 }
 

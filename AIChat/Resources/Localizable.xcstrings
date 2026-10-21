@@ -117,6 +117,16 @@
         }
       }
     },
+    "Allow notifications for this app in Settings." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешите уведомления для приложения в Настройках."
+          }
+        }
+      }
+    },
     "Animate" : {
       "localizations" : {
         "ru" : {
@@ -133,6 +143,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ответы, письма, идеи и планы за секунды"
+          }
+        }
+      }
+    },
+    "App Version: %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия приложения: %@"
           }
         }
       }
@@ -247,6 +267,16 @@
         }
       }
     },
+    "Clear cache" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить кэш"
+          }
+        }
+      }
+    },
     "Close" : {
       "localizations" : {
         "ru" : {
@@ -263,6 +293,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Свёрнута"
+          }
+        }
+      }
+    },
+    "Contact us" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Связаться с нами"
           }
         }
       }
@@ -634,6 +674,16 @@
         }
       }
     },
+    "Info & legal" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Информация"
+          }
+        }
+      }
+    },
     "Landscape" : {
       "localizations" : {
         "ru" : {
@@ -785,12 +835,42 @@
         }
       }
     },
+    "Notifications" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления"
+          }
+        }
+      }
+    },
+    "Notifications are turned off" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления выключены"
+          }
+        }
+      }
+    },
     "OK" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть Настройки"
           }
         }
       }
@@ -968,6 +1048,26 @@
         }
       }
     },
+    "Purchases & Actions" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покупки и действия"
+          }
+        }
+      }
+    },
+    "Purchases restored" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покупки восстановлены"
+          }
+        }
+      }
+    },
     "Quality" : {
       "localizations" : {
         "ru" : {
@@ -985,6 +1085,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отложенные сообщения отправлены"
+          }
+        }
+      }
+    },
+    "Rate app" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оценить приложение"
           }
         }
       }
@@ -1099,6 +1209,16 @@
         }
       }
     },
+    "Restore purchases" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить покупки"
+          }
+        }
+      }
+    },
     "Result" : {
       "localizations" : {
         "ru" : {
@@ -1159,6 +1279,16 @@
         }
       }
     },
+    "Share with friends" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться с друзьями"
+          }
+        }
+      }
+    },
     "Simplify complex information" : {
       "localizations" : {
         "ru" : {
@@ -1205,6 +1335,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Начните разговор, чтобы увидеть\nздесь историю"
+          }
+        }
+      }
+    },
+    "Support us" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поддержите нас"
           }
         }
       }
@@ -1309,6 +1449,16 @@
         }
       }
     },
+    "Try this app: AI chat and photo-to-video templates." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попробуйте приложение: AI-чат и видео из фото по шаблонам."
+          }
+        }
+      }
+    },
     "Turn Photo\ninto Video" : {
       "localizations" : {
         "ru" : {
@@ -1359,6 +1509,16 @@
         }
       }
     },
+    "Upgrade plan" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Улучшить тариф"
+          }
+        }
+      }
+    },
     "Upload failed" : {
       "localizations" : {
         "ru" : {
@@ -1375,6 +1535,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Загрузка фото"
+          }
+        }
+      }
+    },
+    "Usage Policy" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правила использования"
           }
         }
       }

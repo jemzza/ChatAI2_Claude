@@ -46,8 +46,9 @@ struct GenerationViewModelTests {
         #expect(GenerationViewModel.phase(for: nil, media: media) == .missing)
         #expect(GenerationViewModel.phase(for: generation(status: .generating), media: media) == .generating)
         #expect(GenerationViewModel.phase(for: generation(status: .creating), media: media) == .generating)
+        // Файла в кэше нет (очистили) — играем по ссылке.
         #expect(GenerationViewModel.phase(for: generation(status: .succeeded, local: "a.mp4"), media: media)
-                == .ready(media.videoURL(named: "a.mp4")))
+                == .ready(URL(string: "https://media.example.test/v.mp4")!))
         #expect(GenerationViewModel.phase(for: generation(status: .succeeded), media: media)
                 == .ready(URL(string: "https://media.example.test/v.mp4")!))
         var failed = generation(status: .failed)

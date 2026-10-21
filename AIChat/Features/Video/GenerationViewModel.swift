@@ -71,7 +71,8 @@ final class GenerationViewModel: ObservableObject {
         case .failed:
             return .failed(generation.failure?.kind ?? .unknown)
         case .succeeded:
-            if let name = generation.localVideoName { return .ready(media.videoURL(named: name)) }
+            // Кэш могли очистить («Clear cache») — тогда играем по ссылке.
+            if let local = generation.localVideoName.flatMap(media.localVideoURL(named:)) { return .ready(local) }
             if let url = generation.videoURL { return .ready(url) }
             return .failed(.unknown)
         }
@@ -118,10 +119,7 @@ final class GenerationViewModel: ObservableObject {
 
     private func localFile() async throws -> URL {
         guard let generation else { throw APIError(kind: .notFound) }
-        if let name = generation.localVideoName {
-            let url = media.videoURL(named: name)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
-        }
+        if let local = generation.localVideoName.flatMap(media.localVideoURL(named:)) { return local }
         guard let remote = generation.videoURL else { throw APIError(kind: .notFound) }
         return media.videoURL(named: try await media.downloadVideo(from: remote))
     }

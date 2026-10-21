@@ -52,7 +52,7 @@ struct RootView: View {
         case let .history(tab):
             HistoryView(tab: tab, dependencies: dependencies)
         case .settings:
-            PlaceholderScreen(title: "Settings", showsBack: true)
+            SettingsView(dependencies: dependencies)
         }
     }
 }

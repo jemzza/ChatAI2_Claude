@@ -43,6 +43,8 @@ targets:
       path: AIChat/Info.plist
       properties:
         CFBundleDisplayName: AI Chat
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Цвет фона приложения — без чёрной вспышки перед сплэшем.
         UILaunchScreen:
           UIColorName: Background

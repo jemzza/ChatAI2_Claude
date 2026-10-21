@@ -10,6 +10,8 @@ protocol MediaStoring: Sendable {
     /// Скачивает результат в кэш видео. - Returns: имя файла.
     func downloadVideo(from url: URL) async throws -> String
     func videoURL(named name: String) -> URL
+    /// Путь к скачанному видео, если файл ещё в кэше; `nil` — кэш очищен.
+    func localVideoURL(named name: String) -> URL?
     /// Удаляет файлы генерации; отсутствующие — не ошибка.
     func deleteFiles(sourceImageName: String?, videoName: String?)
 }

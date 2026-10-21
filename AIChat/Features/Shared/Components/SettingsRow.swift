@@ -23,6 +23,9 @@ struct SettingsRow: View {
         }
     }
 
+    /// Только внешний вид (без кнопки) — внутрь чужих контролов.
+    var labelOnly: some View { content }
+
     private var content: some View {
         HStack(spacing: 4) {
             Image(systemName: systemImage)
@@ -64,6 +67,16 @@ struct SettingsRow: View {
                 .labelsHidden()
                 .tint(.appGradientEnd)
         }
+    }
+}
+
+/// Вид строки с шевроном без действия — для `ShareLink` и других обёрток.
+struct SettingsRowLabel: View {
+    let systemImage: String
+    let title: LocalizedStringKey
+
+    var body: some View {
+        SettingsRow(systemImage: systemImage, title: title).labelOnly
     }
 }
 

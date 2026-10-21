@@ -136,7 +136,7 @@
       Rename/Delete, алерты; сетка видео masonry с In progress / New / Error +
       Try again; пустые состояния.
 - [x] 6.10 Папки в History → Chat: создать/переименовать/удалить, «Move to folder».
-- [ ] 6.11 Settings: все строки макета (Rate, Share, Upgrade, Notifications,
+- [x] 6.11 Settings: все строки макета (Rate, Share, Upgrade, Notifications,
       Clear cache с размером, Restore, Contact, Privacy, Usage, версия).
 
 ## 7. Полировка и сдача
@@ -296,3 +296,12 @@ _Сюда записываем, что пошло не так и что реши
   контекстное меню папки — Rename/Delete (чаты остаются в истории); у чата
   в свайпе — «Move» (в папку, из папки, «New folder…»). `-mockData` теперь
   с демо-папками. Проверено вручную: список папок; меню и перенос — тестами.
+- 6.11: «Notifications» — один переключатель на ответы чата, отправку outbox и
+  готовые видео; разрешение — при включении, запрещено в системе — алерт с
+  «Open Settings». «Clear cache» чистит скачанные видео и кадры превью
+  (история и исходные фото не трогаются; видео без файла играют по ссылке —
+  `MediaStoring.localVideoURL`). «Rate app» — системный `requestReview`.
+  Contact us / Privacy / Usage Policy и ссылка App Store для «Share» —
+  `nil` в `AppLinks`, ждут заказчика. Версия в Info.plist теперь из
+  `MARKETING_VERSION`. Проверено вручную: внешний вид экрана; действия —
+  юнит-тестами.

@@ -71,6 +71,9 @@ struct AppDependencies {
     let thumbnails: any VideoThumbnailing
     let photoAccess: any PhotoLibraryAccess
     let photoSaver: any PhotoSaving
+    let settings: any SettingsStoring
+    let notifications: any LocalNotificationScheduling
+    let cache: any CacheManaging
 }
 
 extension AppContainer {
@@ -83,9 +86,10 @@ extension AppContainer {
         let database = try AppDatabase.onDisk()
         let repository = try await makeRepository(plan.storage, database: database)
         let connectivity = makeConnectivity(plan.network)
+        let scheduler = UserNotificationScheduler()
         let notifications = NotificationService(
             settings: settings,
-            scheduler: UserNotificationScheduler(),
+            scheduler: scheduler,
             activity: UIKitAppActivity(),
             repository: repository
         )
@@ -111,7 +115,8 @@ extension AppContainer {
                                subscription: subscription, chat: chat, videoRepository: videoRepository,
                                videoAPI: videoAPI, media: media, video: video,
                                thumbnails: makeThumbnails(plan.storage), photoAccess: SystemPhotoLibraryAccess(),
-                               photoSaver: SystemPhotoSaver())
+                               photoSaver: SystemPhotoSaver(), settings: settings, notifications: scheduler,
+                               cache: FileCacheManager.standard())
     }
 
     /// `-mockData` — каталог и генерация видео из фейка: экраны видео работают без сети.

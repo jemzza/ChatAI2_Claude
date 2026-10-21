@@ -74,6 +74,11 @@ struct FileMediaStore: MediaStoring {
         videosDirectory.appendingPathComponent(name, isDirectory: false)
     }
 
+    func localVideoURL(named name: String) -> URL? {
+        let url = videoURL(named: name)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
     func deleteFiles(sourceImageName: String?, videoName: String?) {
         if let sourceImageName { try? FileManager.default.removeItem(at: sourceImageURL(named: sourceImageName)) }
         if let videoName { try? FileManager.default.removeItem(at: videoURL(named: videoName)) }

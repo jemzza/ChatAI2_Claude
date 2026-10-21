@@ -7,4 +7,8 @@ enum AppLinks {
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
     static let privacyPolicy: URL? = nil
     static let usagePolicy: URL? = nil
+    /// Адрес поддержки («Contact us») — ждём от заказчика.
+    static let contact: URL? = nil
+    /// Страница в App Store для «Share with friends» — появится после публикации.
+    static let appStore: URL? = nil
 }

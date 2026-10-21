@@ -44,6 +44,10 @@ final class FakeMediaStore: MediaStoring {
 
     func videoURL(named name: String) -> URL { URL(fileURLWithPath: "/fake/videos/\(name)") }
 
+    func localVideoURL(named name: String) -> URL? {
+        state.withLock { $0.videos.contains(name) } ? videoURL(named: name) : nil
+    }
+
     func deleteFiles(sourceImageName: String?, videoName: String?) {
         state.withLock { state in
             if let sourceImageName { state.images[sourceImageName] = nil }
