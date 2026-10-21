@@ -9,7 +9,8 @@ import Foundation
 /// - `-mockSlowReply` — фейковый AI отвечает через несколько секунд;
 /// - `-mockPremium` / `-mockFree` — подписка-фейк с активной подпиской / без неё;
 /// - `-componentGallery` — вместо приложения экран со всеми общими компонентами;
-/// - `-resetOnboarding` — показать онбординг, как при первом запуске.
+/// - `-resetOnboarding` — показать онбординг, как при первом запуске;
+/// - `-skipOnboarding` — сразу главный экран (UI-тесты экранов).
 struct LaunchOptions: Hashable, Sendable {
     var useMockData = false
     var forceOffline = false
@@ -19,6 +20,7 @@ struct LaunchOptions: Hashable, Sendable {
     var mockPremium: Bool?
     var showComponentGallery = false
     var resetOnboarding = false
+    var skipOnboarding = false
 
     static let none = LaunchOptions()
 
@@ -33,6 +35,7 @@ struct LaunchOptions: Hashable, Sendable {
         slowReply = arguments.contains("-mockSlowReply")
         showComponentGallery = arguments.contains("-componentGallery")
         resetOnboarding = arguments.contains("-resetOnboarding")
+        skipOnboarding = arguments.contains("-skipOnboarding")
         if arguments.contains("-mockPremium") {
             mockPremium = true
         } else if arguments.contains("-mockFree") {

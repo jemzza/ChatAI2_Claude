@@ -28,6 +28,7 @@ final class AppContainer {
         self.launchOptions = launchOptions
         self.settings = settings
         if launchOptions.resetOnboarding { settings.hasCompletedOnboarding = false }
+        if launchOptions.skipOnboarding { settings.hasCompletedOnboarding = true }
     }
 
     static func environment(for processInfo: ProcessInfo) -> Environment {

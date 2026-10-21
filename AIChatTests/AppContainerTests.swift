@@ -79,6 +79,13 @@ struct DependencyPlanTests {
         #expect(!settings.hasCompletedOnboarding)
     }
 
+    @MainActor @Test func skipOnboardingFlagMarksItDone() {
+        let settings = InMemorySettingsStore(hasCompletedOnboarding: false)
+        _ = AppContainer(environment: .live, launchOptions: LaunchOptions(arguments: ["app", "-skipOnboarding"]),
+                         settings: settings)
+        #expect(settings.hasCompletedOnboarding)
+    }
+
     @Test func componentGalleryFlag() {
         #expect(LaunchOptions(arguments: ["app", "-componentGallery"]).showComponentGallery)
         #expect(!LaunchOptions(arguments: ["app"]).showComponentGallery)
