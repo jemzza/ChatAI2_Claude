@@ -127,6 +127,19 @@ struct ChatRepositoryContractTests {
     }
 
     @Test(arguments: RepositoryKind.allCases)
+    func summariesCarryLastNonEmptyMessage(kind: RepositoryKind) async throws {
+        let repository = kind.make()
+        let (chat, _) = try await seedChat(repository)
+        try await repository.insertMessage(reply(chat, "First answer", status: .done, at: 5))
+        try await repository.insertMessage(reply(chat, "", status: .generating, at: 6))
+
+        let summaries = try await firstValue(of: repository.observeChatSummaries()) {
+            $0.first?.lastMessage == "First answer"
+        }
+        #expect(summaries.map(\.chat.id) == [chat.id])
+    }
+
+    @Test(arguments: RepositoryKind.allCases)
     func pinAndUnpinChat(kind: RepositoryKind) async throws {
         let repository = kind.make()
         let (chat, _) = try await seedChat(repository)

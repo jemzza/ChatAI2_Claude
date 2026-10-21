@@ -21,11 +21,21 @@ final class InMemoryChatRepository: ChatRepository {
         var messages: [UUID: StoredMessage] = [:]
         var nextSequence = 0
         var chatObservers: [UUID: AsyncStream<[Chat]>.Continuation] = [:]
+        var summaryObservers: [UUID: AsyncStream<[ChatSummary]>.Continuation] = [:]
         var sidebarObservers: [UUID: AsyncStream<SidebarSnapshot>.Continuation] = [:]
         var messageObservers: [UUID: MessageObserver] = [:]
 
         var sortedChats: [Chat] {
             chats.values.sorted { ($0.updatedAt, $0.createdAt) > ($1.updatedAt, $1.createdAt) }
+        }
+
+        var summaries: [ChatSummary] {
+            sortedChats.map { chat in
+                let last = messages.values
+                    .filter { $0.message.chatId == chat.id && !$0.message.text.isEmpty }
+                    .max { ($0.message.createdAt, $0.sequence) < ($1.message.createdAt, $1.sequence) }
+                return ChatSummary(chat: chat, lastMessage: last?.message.text)
+            }
         }
 
         var sortedFolders: [Folder] {
@@ -69,6 +79,10 @@ final class InMemoryChatRepository: ChatRepository {
                 let snapshot = sortedChats
                 for continuation in chatObservers.values { continuation.yield(snapshot) }
             }
+            if chatsChanged || !chatIds.isEmpty {
+                let snapshot = summaries
+                for continuation in summaryObservers.values { continuation.yield(snapshot) }
+            }
             if chatsChanged || foldersChanged {
                 let snapshot = sidebar
                 for continuation in sidebarObservers.values { continuation.yield(snapshot) }
@@ -90,6 +104,19 @@ final class InMemoryChatRepository: ChatRepository {
     }
 
     // MARK: Наблюдение
+
+    func observeChatSummaries() -> AsyncStream<[ChatSummary]> {
+        AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+            let id = UUID()
+            state.withLock { state in
+                state.summaryObservers[id] = continuation
+                continuation.yield(state.summaries)
+            }
+            continuation.onTermination = { [weak self] _ in
+                self?.state.withLock { _ = $0.summaryObservers.removeValue(forKey: id) }
+            }
+        }
+    }
 
     func observeChats() -> AsyncStream<[Chat]> {
         AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in

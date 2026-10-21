@@ -13,6 +13,7 @@ final class RecordingRepository: ChatRepository {
     var updateStatuses: [MessageStatus] { updates.withLock { $0 } }
 
     func observeChats() -> AsyncStream<[Chat]> { base.observeChats() }
+    func observeChatSummaries() -> AsyncStream<[ChatSummary]> { base.observeChatSummaries() }
     func observeMessages(chatId: UUID) -> AsyncStream<[Message]> { base.observeMessages(chatId: chatId) }
     func insertChat(_ chat: Chat, firstMessage: Message) async throws {
         try await base.insertChat(chat, firstMessage: firstMessage)

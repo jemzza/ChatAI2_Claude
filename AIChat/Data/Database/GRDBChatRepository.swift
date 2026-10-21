@@ -28,6 +28,23 @@ final class GRDBChatRepository: ChatRepository {
         }
     }
 
+    func observeChatSummaries() -> AsyncStream<[ChatSummary]> {
+        observe { db in
+            // Одним запросом: последнее непустое сообщение каждого чата — коррелированный подзапрос.
+            let rows = try Row.fetchAll(db, sql: """
+                SELECT chat.*,
+                       (SELECT message.text FROM message
+                        WHERE message.chatId = chat.id AND message.text <> ''
+                        ORDER BY message.createdAt DESC, message.rowid DESC LIMIT 1) AS lastMessage
+                FROM chat
+                ORDER BY chat.updatedAt DESC, chat.createdAt DESC, chat.rowid DESC
+                """)
+            return try rows.map { row in
+                ChatSummary(chat: try ChatRecord(row: row).chat, lastMessage: row["lastMessage"])
+            }
+        }
+    }
+
     func observeSidebar() -> AsyncStream<SidebarSnapshot> {
         observe { db in
             // Одно чтение — согласованный снимок папок и чатов.

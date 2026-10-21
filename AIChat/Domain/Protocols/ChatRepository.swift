@@ -9,6 +9,8 @@ protocol ChatRepository: Sendable {
     func observeChats() -> AsyncStream<[Chat]>
     /// Папки по `position` с их чатами + чаты без папки («Recents»); внутри секций — новые сверху.
     func observeSidebar() -> AsyncStream<SidebarSnapshot>
+    /// Чаты с превью последнего непустого сообщения — для истории; порядок как у `observeChats`.
+    func observeChatSummaries() -> AsyncStream<[ChatSummary]>
     /// Сообщения чата по `createdAt`, при равенстве — по порядку вставки.
     func observeMessages(chatId: UUID) -> AsyncStream<[Message]>
 

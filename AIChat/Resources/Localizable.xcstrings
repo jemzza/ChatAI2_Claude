@@ -197,12 +197,32 @@
         }
       }
     },
+    "Chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чат"
+          }
+        }
+      }
+    },
     "Chat actions" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Действия с чатом"
+          }
+        }
+      }
+    },
+    "Chat name" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Название чата"
           }
         }
       }
@@ -373,6 +393,16 @@
         }
       }
     },
+    "Create your first video to see it here" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создайте первое видео — оно появится здесь"
+          }
+        }
+      }
+    },
     "Dark" : {
       "comment" : "Appearance option: always dark theme.",
       "localizations" : {
@@ -420,6 +450,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Скачать"
+          }
+        }
+      }
+    },
+    "Enter a new name for this chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите новое название чата"
+          }
+        }
+      }
+    },
+    "Error" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка"
           }
         }
       }
@@ -514,6 +564,16 @@
         }
       }
     },
+    "In progress" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В процессе"
+          }
+        }
+      }
+    },
     "Landscape" : {
       "localizations" : {
         "ru" : {
@@ -565,6 +625,16 @@
         }
       }
     },
+    "New" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новое"
+          }
+        }
+      }
+    },
     "No active subscriptions were found for this Apple ID." : {
       "localizations" : {
         "ru" : {
@@ -575,12 +645,32 @@
         }
       }
     },
+    "No chats yet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чатов пока нет"
+          }
+        }
+      }
+    },
     "No internet connection. Check your connection and try again." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нет подключения к интернету. Проверьте сеть и попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "No videos yet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео пока нет"
           }
         }
       }
@@ -839,6 +929,26 @@
         }
       }
     },
+    "Rename" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переименовать"
+          }
+        }
+      }
+    },
+    "Rename chat" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переименовать чат"
+          }
+        }
+      }
+    },
     "Replace" : {
       "localizations" : {
         "ru" : {
@@ -889,6 +999,16 @@
         }
       }
     },
+    "Save" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
+          }
+        }
+      }
+    },
     "Send" : {
       "localizations" : {
         "ru" : {
@@ -929,6 +1049,16 @@
         }
       }
     },
+    "Something went wrong" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что-то пошло не так"
+          }
+        }
+      }
+    },
     "Something went wrong. Please try again." : {
       "localizations" : {
         "ru" : {
@@ -945,6 +1075,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Квадрат"
+          }
+        }
+      }
+    },
+    "Start a conversation to see\nyour history here" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начните разговор, чтобы увидеть\nздесь историю"
           }
         }
       }
@@ -1005,6 +1145,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Чат будет удалён из истории."
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня"
           }
         }
       }
@@ -1109,6 +1259,16 @@
         }
       }
     },
+    "Video" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео"
+          }
+        }
+      }
+    },
     "Video saved" : {
       "localizations" : {
         "ru" : {
@@ -1155,6 +1315,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Год %@"
+          }
+        }
+      }
+    },
+    "Yesterday" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вчера"
           }
         }
       }
