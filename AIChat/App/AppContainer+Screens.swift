@@ -83,7 +83,8 @@ extension AppContainer {
         let plan = DependencyPlan(options: launchOptions)
         // Подписка — первой: её `userID` нужен каждому запросу к API.
         let subscription = makeSubscription(plan.subscription)
-        let database = try AppDatabase.onDisk()
+        // `-mockData`: и видео-история в памяти — демо-генерации не смешиваются с настоящими.
+        let database = try plan.storage == .previewData ? AppDatabase.inMemory() : AppDatabase.onDisk()
         let repository = try await makeRepository(plan.storage, database: database)
         let connectivity = makeConnectivity(plan.network)
         let scheduler = UserNotificationScheduler()
@@ -119,11 +120,12 @@ extension AppContainer {
                                cache: FileCacheManager.standard())
     }
 
-    /// `-mockData` — каталог и генерация видео из фейка: экраны видео работают без сети.
+    /// `-mockData` — каталог и генерация видео из фейка (результат — mp4 из фото):
+    /// экраны видео работают без сети.
     private func makeVideoAPI(_ storage: DependencyPlan.Storage,
                               subscription: any SubscriptionService) -> any VideoAPI {
         #if DEBUG
-        if storage == .previewData { return FakeVideoAPI() }
+        if storage == .previewData { return DemoVideoAPI() }
         #endif
         return PixverseClient(api: nebulaAPI(service: "pixverse", subscription: subscription),
                               catalogCacheURL: Self.templatesCacheURL)
