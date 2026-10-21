@@ -60,6 +60,7 @@ struct TemplatePreviewView: View {
             }
             .scrollBounceBehaviorIfAvailable()
             GradientButton(title: "Create", isEnabled: model.canCreate, isLoading: model.isCreating) {
+                Haptics.tap()
                 Task { await model.create() }
             }
             .padding(.horizontal, AppMetrics.sideInset)
@@ -76,6 +77,7 @@ struct TemplatePreviewView: View {
             }
         }
         .toast($model.toast)
+        .haptic(on: model.toast, ToastMessage.haptic)
         .photosPicker(isPresented: $isPickerPresented, selection: $pickerItem, matching: .images)
         .onChange(of: pickerItem) { item in
             guard let item else { return }
@@ -84,8 +86,9 @@ struct TemplatePreviewView: View {
         }
         .task { await model.load() }
         .onAppear {
-            model.onPaywall = { router.showPaywall(from: .premiumAction) }
-            model.onCreated = { id in router.replaceTop(with: .generation(id: id)) }
+            // Захватываем только роутер: замыкание с `self` держало бы View → StateObject → модель (цикл).
+            model.onPaywall = { [router] in router.showPaywall(from: .premiumAction) }
+            model.onCreated = { [router] id in router.replaceTop(with: .generation(id: id)) }
         }
     }
 

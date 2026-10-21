@@ -348,7 +348,7 @@ private struct ChatHistoryRow: View {
                     .font(AppFont.headline)
                     .foregroundStyle(Color.appAccent)
                 if let last = summary.lastMessage {
-                    Text(last.replacingOccurrences(of: "\n", with: " "))
+                    Text(MarkdownParser.plainText(last))
                         .font(AppFont.subheadline)
                         .foregroundStyle(Color.appAccent.opacity(0.5))
                 }

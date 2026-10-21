@@ -160,8 +160,7 @@ private struct CodeCard: View {
                 Button {
                     copy(code)
                     isCopied = true
-                    // `.sensoryFeedback` — только с iOS 17.
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    Haptics.success()
                 } label: {
                     Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                         .font(.caption.weight(.medium))

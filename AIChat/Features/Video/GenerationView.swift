@@ -34,9 +34,23 @@ struct GenerationView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .animation(.easeInOut(duration: 0.35), value: model.phase)
         .toast($model.toast)
+        .haptic(on: model.toast, ToastMessage.haptic)
+        .haptic(on: model.saveResult) { result in
+            switch result {
+            case .saved: Haptics.success
+            case .failed: Haptics.error
+            case nil: nil
+            }
+        }
+        // Видео готово — отклик, пока пользователь на экране.
+        .haptic(on: model.phase) { phase in
+            if case .ready = phase { return Haptics.success }
+            return nil
+        }
         .task { await model.observe() }
         .onAppear {
-            model.onReplaced = { id in router.replaceTop(with: .generation(id: id)) }
+            // Захватываем только роутер — без цикла View → StateObject → модель.
+            model.onReplaced = { [router] id in router.replaceTop(with: .generation(id: id)) }
         }
         .photosPicker(isPresented: $isPickerPresented, selection: $pickerItem, matching: .images)
         .onChange(of: pickerItem) { item in

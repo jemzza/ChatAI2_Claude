@@ -33,6 +33,29 @@ enum MarkdownParser {
         return parser.finish()
     }
 
+    /// Однострочный текст без разметки — для превью в истории: блоки склеены пробелом,
+    /// инлайн-разметка (`**`, `` ` ``, ссылки) снята. Разбираем только начало длинного
+    /// ответа: в строку всё равно влезает одна строка.
+    static func plainText(_ text: String, prefixLength: Int = 400) -> String {
+        parse(String(text.prefix(prefixLength))).map { block -> String in
+            switch block {
+            case let .heading(_, text), let .paragraph(text), let .quote(text): stripInline(text)
+            case let .list(_, items): items.map { stripInline($0.text) }.joined(separator: " ")
+            case let .code(_, code, _): code
+            case .thematicBreak: ""
+            }
+        }
+        .joined(separator: " ")
+        .split(whereSeparator: \.isWhitespace)
+        .joined(separator: " ")
+    }
+
+    private static func stripInline(_ text: String) -> String {
+        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        guard let attributed = try? AttributedString(markdown: text, options: options) else { return text }
+        return String(attributed.characters)
+    }
+
     private struct State {
         var blocks: [MarkdownBlock] = []
         var paragraph: [String] = []

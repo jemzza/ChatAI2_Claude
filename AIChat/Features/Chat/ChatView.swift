@@ -45,11 +45,13 @@ struct ChatView: View {
             .frame(maxHeight: .infinity)
             MessageInputBar(text: $model.draft, placeholder: "How can I help you?",
                             isSendEnabled: model.canSend, focus: $isInputFocused) {
+                Haptics.tap()
                 Task { await model.send() }
             }
         }
         .background(Color.appBackground.ignoresSafeArea())
         .toast($model.toast)
+        .haptic(on: model.toast, ToastMessage.haptic)
         .alert("Delete chat?", isPresented: $isConfirmingDelete) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -63,7 +65,8 @@ struct ChatView: View {
         }
         .task(id: model.chatId) { await model.observe() }
         .onAppear {
-            model.onPaywall = { router.showPaywall(from: .premiumAction) }
+            // Захватываем только роутер: замыкание с `self` держало бы View → StateObject → модель (цикл).
+            model.onPaywall = { [router] in router.showPaywall(from: .premiumAction) }
             // Новый чат открывается с клавиатурой (заметка к макету). Фокус — после анимации
             // перехода: во время push поле ещё не может стать first responder.
             if model.chatId == nil {

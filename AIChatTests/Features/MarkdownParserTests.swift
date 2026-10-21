@@ -118,4 +118,11 @@ struct MarkdownParserTests {
         #expect(MarkdownView.boldLine("Plain") == nil)
         #expect(MarkdownView.boldLine("**a** **b**") == nil)
     }
+
+    @Test func plainTextStripsMarkupForPreview() {
+        let text = "**Welcome to the team!**\n\nHere are a few `tips`:\n- Ask [early](https://example.com);\n- Meet"
+        #expect(MarkdownParser.plainText(text) == "Welcome to the team! Here are a few tips: Ask early; Meet")
+        #expect(MarkdownParser.plainText("# Title\n---\nplain") == "Title plain")
+        #expect(MarkdownParser.plainText("") == "")
+    }
 }

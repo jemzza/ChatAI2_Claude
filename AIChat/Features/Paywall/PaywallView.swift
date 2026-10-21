@@ -42,6 +42,7 @@ struct PaywallView: View {
         .onChange(of: model.isFinished) { finished in
             if finished { onClose() }
         }
+        .haptic(on: model.alert, Self.haptic(for:))
         .alert(item: $model.alert) { alert in
             Alert(title: Text(alertTitle(alert)), message: Text(alertMessage(alert)),
                   dismissButton: .default(Text("OK")))
@@ -199,6 +200,14 @@ struct PaywallView: View {
     }
 
     // MARK: Алерты
+
+    /// Ошибка покупки/восстановления — отклик ошибки; ожидание подтверждения — без отклика.
+    private static func haptic(for alert: PaywallViewModel.Alert?) -> (@MainActor () -> Void)? {
+        switch alert {
+        case .purchaseFailed, .restoreFailed, .nothingToRestore: Haptics.error
+        case .purchasePending, nil: nil
+        }
+    }
 
     private func alertTitle(_ alert: PaywallViewModel.Alert) -> LocalizedStringKey {
         switch alert {
