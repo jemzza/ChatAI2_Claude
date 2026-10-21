@@ -74,4 +74,42 @@ struct HistoryViewModelTests {
         defer { task.cancel() }
         try await waitUntil { model.isChatsEmpty && model.isVideosEmpty }
     }
+
+    // MARK: Папки
+
+    @Test func foldersTakeTheirChatsOutOfDateGroups() {
+        let model = makeModel()
+        let work = Folder(id: UUID(), name: "Work", position: 0, createdAt: now)
+        var inFolder = summary("In folder", hoursAgo: 1)
+        inFolder = ChatSummary(chat: Chat(id: inFolder.chat.id, title: "In folder", createdAt: inFolder.chat.createdAt,
+                                          updatedAt: inFolder.chat.updatedAt, folderId: work.id), lastMessage: nil)
+        let loose = summary("Loose", hoursAgo: 2)
+
+        model.apply([inFolder, loose], folders: [work])
+
+        #expect(model.folders.map(\.folder.name) == ["Work"])
+        #expect(model.folders.first?.chats.map(\.chat.title) == ["In folder"])
+        #expect(model.sections.flatMap(\.chats).map(\.chat.title) == ["Loose"])
+    }
+
+    @Test func createMoveAndDeleteFolder() async throws {
+        let chat = Chat(id: UUID(), title: "Trip", createdAt: now, updatedAt: now)
+        let repository = InMemoryChatRepository(
+            chats: [chat], messages: [Message(chatId: chat.id, role: .user, text: "Hi", status: .sent, createdAt: now)]
+        )
+        let model = makeModel(chats: repository)
+        let task = Task { await model.observe() }
+        defer { task.cancel() }
+        try await waitUntil { model.hasLoadedChats }
+
+        await model.createFolder(named: " Travel ")
+        try await waitUntil { model.folders.map(\.folder.name) == ["Travel"] }
+        let folderId = try #require(model.folders.first?.id)
+
+        await model.move(chat.id, toFolder: folderId)
+        try await waitUntil { model.folders.first?.chats.count == 1 && model.sections.isEmpty }
+
+        await model.deleteFolder(folderId)
+        try await waitUntil { model.folders.isEmpty && model.sections.first?.chats.count == 1 }
+    }
 }

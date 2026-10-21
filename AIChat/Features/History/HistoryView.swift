@@ -12,6 +12,15 @@ struct HistoryView: View {
     @State private var renaming: ChatSummary?
     @State private var newTitle = ""
     @State private var deleting: ChatSummary?
+    /// Папки: свёрнутые, диалоги создания/переименования/удаления, перенос чата.
+    @State private var collapsedFolders: Set<UUID> = []
+    @State private var isCreatingFolder = false
+    @State private var renamingFolder: Folder?
+    @State private var deletingFolder: Folder?
+    @State private var folderName = ""
+    @State private var moving: ChatSummary?
+    /// Чат, который положить в создаваемую папку (из «Move → New folder…»).
+    @State private var chatForNewFolder: ChatSummary?
 
     init(tab: HistoryTab, dependencies: AppDependencies) {
         thumbnails = dependencies.thumbnails
@@ -49,6 +58,52 @@ struct HistoryView: View {
         } message: {
             Text("Enter a new name for this chat")
         }
+        .alert("New folder", isPresented: $isCreatingFolder) {
+            TextField("Folder name", text: $folderName)
+            Button("Cancel", role: .cancel) { chatForNewFolder = nil }
+            Button("Create") {
+                let name = folderName
+                let chat = chatForNewFolder
+                chatForNewFolder = nil
+                Task { await model.createFolder(named: name, moving: chat?.id) }
+            }
+            .disabled(!HistoryViewModel.canRename(to: folderName))
+        }
+        .alert("Rename folder", isPresented: Binding(get: { renamingFolder != nil },
+                                                     set: { if !$0 { renamingFolder = nil } })) {
+            TextField("Folder name", text: $folderName)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") {
+                if let folder = renamingFolder { Task { await model.renameFolder(folder.id, to: folderName) } }
+            }
+            .disabled(!HistoryViewModel.canRename(to: folderName))
+        }
+        .alert("Delete folder?", isPresented: Binding(get: { deletingFolder != nil },
+                                                      set: { if !$0 { deletingFolder = nil } })) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                if let folder = deletingFolder { Task { await model.deleteFolder(folder.id) } }
+            }
+        } message: {
+            Text("Chats from this folder will stay in your history.")
+        }
+        .confirmationDialog("Move to folder", isPresented: Binding(get: { moving != nil },
+                                                                   set: { if !$0 { moving = nil } }),
+                            titleVisibility: .visible, presenting: moving) { chat in
+            ForEach(model.allFolders.filter { $0.id != chat.chat.folderId }) { folder in
+                // Название папки — данные пользователя.
+                Button(folder.name) { Task { await model.move(chat.id, toFolder: folder.id) } }
+            }
+            if chat.chat.folderId != nil {
+                Button("Remove from folder") { Task { await model.move(chat.id, toFolder: nil) } }
+            }
+            Button("New folder…") {
+                chatForNewFolder = chat
+                folderName = ""
+                isCreatingFolder = true
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         .alert("Delete chat?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -72,6 +127,7 @@ struct HistoryView: View {
                 if !model.pinned.isEmpty {
                     chatSection(Text("Pinned"), chats: model.pinned)
                 }
+                foldersSection
                 ForEach(model.sections) { section in
                     chatSection(title(for: section.group), chats: section.chats)
                 }
@@ -81,13 +137,92 @@ struct HistoryView: View {
             .environment(\.defaultMinListRowHeight, 0)
             .animation(.easeInOut(duration: 0.25), value: model.sections)
             .animation(.easeInOut(duration: 0.25), value: model.pinned)
+            .animation(.easeInOut(duration: 0.25), value: model.folders)
+            .animation(.easeInOut(duration: 0.25), value: collapsedFolders)
+        }
+    }
+
+    /// «Folders»: папки с их чатами; «+» — новая папка (решение заказчика: папки — в истории).
+    private var foldersSection: some View {
+        Section {
+            ForEach(model.folders) { section in
+                FolderRow(folder: section.folder, count: section.chats.count,
+                          isExpanded: !collapsedFolders.contains(section.id)) {
+                    if collapsedFolders.contains(section.id) {
+                        collapsedFolders.remove(section.id)
+                    } else {
+                        collapsedFolders.insert(section.id)
+                    }
+                }
+                .contextMenu {
+                    Button {
+                        folderName = section.folder.name
+                        renamingFolder = section.folder
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) {
+                        deletingFolder = section.folder
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                .modifier(HistoryRowStyle())
+                if !collapsedFolders.contains(section.id) {
+                    ForEach(section.chats) { summary in
+                        chatRow(summary)
+                            .padding(.leading, 24)
+                    }
+                }
+            }
+        } header: {
+            HStack {
+                sectionTitle(Text("Folders"))
+                Spacer()
+                Button {
+                    chatForNewFolder = nil
+                    folderName = ""
+                    isCreatingFolder = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(AppGradient.primary)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel(Text("New folder"))
+            }
+            .padding(.trailing, 4)
+            .listRowInsets(EdgeInsets())
+            .background(Color.appBackground)
         }
     }
 
     private func chatSection(_ title: Text, chats: [ChatSummary]) -> some View {
         Section {
             ForEach(chats) { summary in
-                Button {
+                chatRow(summary)
+            }
+        } header: {
+            sectionTitle(title)
+                .background(Color.appBackground)
+        }
+    }
+
+    private func sectionTitle(_ title: Text) -> some View {
+        title
+            .font(AppFont.title3)
+            .foregroundStyle(Color.appAccent)
+            .textCase(nil)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppMetrics.sideInset)
+            .listRowInsets(EdgeInsets())
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private func chatRow(_ summary: ChatSummary) -> some View {
+        Button {
                     router.push(.chat(chatId: summary.id, prompt: nil))
                 } label: {
                     ChatHistoryRow(summary: summary)
@@ -107,25 +242,14 @@ struct HistoryView: View {
                         Label("Rename", systemImage: "pencil")
                     }
                     .tint(.orange)
+                    Button {
+                        moving = summary
+                    } label: {
+                        Label("Move", systemImage: "folder")
+                    }
+                    .tint(.appGradientStart)
                 }
-                .listRowInsets(EdgeInsets(top: 6, leading: AppMetrics.sideInset, bottom: 6,
-                                          trailing: AppMetrics.sideInset))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
-        } header: {
-            title
-                .font(AppFont.title3)
-                .foregroundStyle(Color.appAccent)
-                .textCase(nil)
-                .padding(.top, 8)
-                .padding(.bottom, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, AppMetrics.sideInset)
-                .listRowInsets(EdgeInsets())
-                .background(Color.appBackground)
-                .accessibilityAddTraits(.isHeader)
-        }
+                .modifier(HistoryRowStyle())
     }
 
     private func title(for group: HistoryViewModel.DateGroup) -> Text {
@@ -241,6 +365,53 @@ private struct ChatHistoryRow: View {
         .padding(16)
         .background(Color.appSurface.opacity(0.4), in: RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
         .contentShape(RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+    }
+}
+
+/// Строка списка истории без фона и разделителей, с отступами макета.
+private struct HistoryRowStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .listRowInsets(EdgeInsets(top: 6, leading: AppMetrics.sideInset, bottom: 6, trailing: AppMetrics.sideInset))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+    }
+}
+
+/// Папка: иконка, название, число чатов, стрелка раскрытия.
+private struct FolderRow: View {
+    let folder: Folder
+    let count: Int
+    let isExpanded: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(spacing: 16) {
+                Image(systemName: "folder")
+                    .font(.system(size: 20))
+                    .foregroundStyle(AppGradient.primary)
+                    .frame(width: 28, height: 28)
+                // Название папки — данные пользователя.
+                Text(folder.name)
+                    .font(AppFont.headline)
+                    .foregroundStyle(Color.appAccent)
+                    .lineLimit(1)
+                Spacer()
+                Text("\(count)")
+                    .font(AppFont.subheadline)
+                    .foregroundStyle(Color.appAccent.opacity(0.5))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.appAccent.opacity(0.5))
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .padding(16)
+            .background(Color.appSurface.opacity(0.4), in: RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+            .contentShape(RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityValue(Text(isExpanded ? "Expanded" : "Collapsed"))
     }
 }
 

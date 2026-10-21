@@ -202,7 +202,7 @@ extension AppContainer {
             return try await GRDBChatRepository.launch(database: database)
         case .previewData:
             #if DEBUG
-            let repository = PreviewData.repository()
+            let repository = PreviewData.repositoryWithFolders()
             repository.markGeneratingAsInterrupted()
             return repository
             #else

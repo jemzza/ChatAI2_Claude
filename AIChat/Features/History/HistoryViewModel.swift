@@ -12,6 +12,13 @@ final class HistoryViewModel: ObservableObject {
         case day(Date)
     }
 
+    /// Папка с её чатами (закреплённые — только в «Pinned», без дублей).
+    struct FolderSection: Identifiable, Hashable {
+        let folder: Folder
+        let chats: [ChatSummary]
+        var id: UUID { folder.id }
+    }
+
     struct ChatSection: Identifiable, Hashable {
         let group: DateGroup
         let chats: [ChatSummary]
@@ -20,6 +27,7 @@ final class HistoryViewModel: ObservableObject {
 
     @Published var tab: HistoryTab
     @Published private(set) var pinned: [ChatSummary] = []
+    @Published private(set) var folders: [FolderSection] = []
     @Published private(set) var sections: [ChatSection] = []
     @Published private(set) var videos: [VideoGeneration] = []
     @Published private(set) var hasLoadedChats = false
@@ -44,19 +52,31 @@ final class HistoryViewModel: ObservableObject {
         self.now = now
     }
 
-    var isChatsEmpty: Bool { hasLoadedChats && pinned.isEmpty && sections.isEmpty }
+    var isChatsEmpty: Bool { hasLoadedChats && pinned.isEmpty && sections.isEmpty && folders.isEmpty }
+
+    private var latestSummaries: [ChatSummary] = []
+    private var latestFolders: [Folder] = []
     var isVideosEmpty: Bool { hasLoadedVideos && videos.isEmpty }
 
     func observe() async {
         async let chats: Void = observeChats()
+        async let folders: Void = observeFolders()
         async let videos: Void = observeVideos()
-        _ = await (chats, videos)
+        _ = await (chats, folders, videos)
     }
 
     private func observeChats() async {
         for await summaries in chatRepository.observeChatSummaries() {
-            apply(summaries)
+            latestSummaries = summaries
+            apply(summaries, folders: latestFolders)
             hasLoadedChats = true
+        }
+    }
+
+    private func observeFolders() async {
+        for await snapshot in chatRepository.observeSidebar() {
+            latestFolders = snapshot.folders.map(\.folder)
+            apply(latestSummaries, folders: latestFolders)
         }
     }
 
@@ -67,12 +87,19 @@ final class HistoryViewModel: ObservableObject {
         }
     }
 
-    func apply(_ summaries: [ChatSummary]) {
+    /// Раскладка: «Pinned» → папки (по `position`) → чаты без папки по датам.
+    func apply(_ summaries: [ChatSummary], folders: [Folder] = []) {
         pinned = summaries
             .filter { $0.chat.pinnedAt != nil }
             .sorted { ($0.chat.pinnedAt ?? .distantPast) > ($1.chat.pinnedAt ?? .distantPast) }
+        let unpinned = summaries.filter { $0.chat.pinnedAt == nil }
+        let known = Set(folders.map(\.id))
+        self.folders = folders.map { folder in
+            FolderSection(folder: folder, chats: unpinned.filter { $0.chat.folderId == folder.id })
+        }
         var sections: [ChatSection] = []
-        for summary in summaries where summary.chat.pinnedAt == nil {
+        // Чат со ссылкой на неизвестную папку — в общей ленте, а не теряется.
+        for summary in unpinned where summary.chat.folderId.map({ !known.contains($0) }) ?? true {
             let group = group(for: summary.chat.updatedAt)
             if sections.last?.group == group {
                 sections[sections.count - 1] = ChatSection(group: group, chats: sections[sections.count - 1].chats + [summary])
@@ -106,6 +133,38 @@ final class HistoryViewModel: ObservableObject {
     func delete(_ chatId: UUID) async {
         try? await session.deleteChat(id: chatId)
     }
+
+    // MARK: Папки
+
+    /// Новая папка; `moving` — сразу положить в неё чат («Move → New folder…»).
+    func createFolder(named name: String, moving chatId: UUID? = nil) async {
+        guard Self.canRename(to: name) else { return }
+        let id = UUID()
+        do {
+            try await chatRepository.createFolder(id: id, name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                  createdAt: now())
+            if let chatId { try await chatRepository.moveChat(id: chatId, toFolder: id) }
+        } catch {
+            return
+        }
+    }
+
+    func renameFolder(_ folderId: UUID, to name: String) async {
+        guard Self.canRename(to: name) else { return }
+        try? await chatRepository.renameFolder(id: folderId, name: name.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// Удаляет папку; её чаты возвращаются в общую ленту.
+    func deleteFolder(_ folderId: UUID) async {
+        try? await chatRepository.deleteFolder(id: folderId)
+    }
+
+    /// `folderId == nil` — убрать из папки.
+    func move(_ chatId: UUID, toFolder folderId: UUID?) async {
+        try? await chatRepository.moveChat(id: chatId, toFolder: folderId)
+    }
+
+    var allFolders: [Folder] { folders.map(\.folder) }
 
     // MARK: Видео
 

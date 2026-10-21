@@ -227,6 +227,16 @@
         }
       }
     },
+    "Chats from this folder will stay in your history." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чаты из папки останутся в истории."
+          }
+        }
+      }
+    },
     "Check your connection and try again." : {
       "localizations" : {
         "ru" : {
@@ -243,6 +253,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "Collapsed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свёрнута"
           }
         }
       }
@@ -444,6 +464,16 @@
         }
       }
     },
+    "Delete folder?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить папку?"
+          }
+        }
+      }
+    },
     "Download" : {
       "localizations" : {
         "ru" : {
@@ -474,6 +504,16 @@
         }
       }
     },
+    "Expanded" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развёрнута"
+          }
+        }
+      }
+    },
     "Explain it simply" : {
       "localizations" : {
         "ru" : {
@@ -490,6 +530,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Быстрее генерация"
+          }
+        }
+      }
+    },
+    "Folder name" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Название папки"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папки"
           }
         }
       }
@@ -625,12 +685,52 @@
         }
       }
     },
+    "Move" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переместить"
+          }
+        }
+      }
+    },
+    "Move to folder" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переместить в папку"
+          }
+        }
+      }
+    },
     "New" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Новое"
+          }
+        }
+      }
+    },
+    "New folder" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая папка"
+          }
+        }
+      }
+    },
+    "New folder…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая папка…"
           }
         }
       }
@@ -919,6 +1019,16 @@
         }
       }
     },
+    "Remove from folder" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать из папки"
+          }
+        }
+      }
+    },
     "Remove photo" : {
       "localizations" : {
         "ru" : {
@@ -945,6 +1055,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Переименовать чат"
+          }
+        }
+      }
+    },
+    "Rename folder" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переименовать папку"
           }
         }
       }
